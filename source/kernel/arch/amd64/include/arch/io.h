@@ -1,6 +1,6 @@
-/* x86 specific I/O functions.
+/* amd64 specific I/O functions.
  *
- * Copyright (c) 2012 Zoltan Kovacs
+ * Copyright (c) 2013 Zoltan Kovacs
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by

@@ -1,0 +1,51 @@
+diff -ru binutils-2.23.2-orig/bfd/config.bfd binutils-2.23.2/bfd/config.bfd
+--- binutils-2.23.2-orig/bfd/config.bfd	2012-09-04 16:14:59.000000000 +0200
++++ binutils-2.23.2/bfd/config.bfd	2013-11-02 21:10:17.957166252 +0100
+@@ -660,6 +660,11 @@
+     want64=true
+     targ_underscore=no
+     ;;
++  x86_64-*-urubu*)
++    targ_defvec=bfd_elf64_x86_64_vec
++    targ_selvecs=bfd_elf32_i386_vec
++    want64=true
++    ;;
+ #endif
+   i[3-7]86-*-lynxos*)
+     targ_defvec=bfd_elf32_i386_vec
+diff -ru binutils-2.23.2-orig/config.sub binutils-2.23.2/config.sub
+--- binutils-2.23.2-orig/config.sub	2012-04-25 17:53:25.000000000 +0200
++++ binutils-2.23.2/config.sub	2013-11-02 21:12:56.270172164 +0100
+@@ -1368,7 +1368,7 @@
+ 	      | -os2* | -vos* | -palmos* | -uclinux* | -nucleus* \
+ 	      | -morphos* | -superux* | -rtmk* | -rtmk-nova* | -windiss* \
+ 	      | -powermax* | -dnix* | -nx6 | -nx7 | -sei* | -dragonfly* \
+-	      | -skyos* | -haiku* | -rdos* | -toppers* | -drops* | -es*)
++	      | -skyos* | -haiku* | -rdos* | -toppers* | -drops* | -es* | -urubu*)
+ 	# Remember, each alternative MUST END IN *, to match a version number.
+ 		;;
+ 	-qnx*)
+diff -ru binutils-2.23.2-orig/gas/configure.tgt binutils-2.23.2/gas/configure.tgt
+--- binutils-2.23.2-orig/gas/configure.tgt	2012-09-04 14:53:45.000000000 +0200
++++ binutils-2.23.2/gas/configure.tgt	2013-11-02 21:14:12.293175004 +0100
+@@ -448,6 +448,7 @@
+   *-*-aros*)				fmt=elf em=linux ;;
+   *-*-vxworks* | *-*-windiss)		fmt=elf em=vxworks ;;
+   *-*-netware)				fmt=elf em=netware ;;
++  *-*-urubu*)                           fmt=elf ;;
+ esac
+ 
+ case ${cpu_type} in
+diff -ru binutils-2.23.2-orig/ld/configure.tgt binutils-2.23.2/ld/configure.tgt
+--- binutils-2.23.2-orig/ld/configure.tgt	2012-09-04 14:53:47.000000000 +0200
++++ binutils-2.23.2/ld/configure.tgt	2013-11-02 21:15:13.179177277 +0100
+@@ -212,6 +212,9 @@
+ 			targ64_extra_libpath=elf_x86_64
+ 			targ_extra_libpath=elf32_x86_64
+ 			tdir_i386linux=${targ_alias}aout ;;
++x86_64-*-urubu*)	targ_emul=elf_x86_64
++			targ_extra_emuls=elf_i386
++			;;
+ x86_64-*-linux-gnux32)	targ_emul=elf32_x86_64
+ 			targ_extra_emuls="elf_x86_64 elf_i386 i386linux elf_l1om elf_k1om"
+ 			targ_extra_libpath="elf_i386 elf_x86_64 elf_l1om elf_k1om"

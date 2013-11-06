@@ -1,0 +1,4 @@
+cpu: count=1
+ata1-slave:  type=cdrom, path=urubu-amd64.iso, status=inserted
+boot: cdrom
+com1: enabled=1, mode=file, dev=serial.txt

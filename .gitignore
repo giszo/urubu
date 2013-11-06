@@ -1,0 +1,14 @@
+*.o
+
+/source/kernel/kernel
+/source/lib/c/src/arch/amd64/syscall_table.h
+/source/drivers/input/ps2/ps2
+/source/servers/terminal/terminal
+
+/source/lib/c/libc.a
+
+/urubu-amd64.iso
+
+/toolchain/amd64
+
+/.sconsign.dblite

@@ -1,0 +1,73 @@
+# Urubu build system
+#
+# Copyright (c) 2013 Zoltan Kovacs
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License along
+# with this program; if not, write to the Free Software Foundation, Inc.,
+# 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+
+import os
+
+from SCons.Builder import Builder
+
+Import("env")
+
+# create a separate environment for the kernel
+kenv = env.Clone()
+
+kenv["BUILDERS"]["Kernel"] = Builder(
+    action = Action("$LD -o $TARGET -T $LINKERSCRIPT $SOURCES", "$LINKCOMSTR"),
+    src_suffix = "$OBJSUFFIX",
+    src_builder = "Object"
+)
+
+kenv["CFLAGS"] += ["-fno-builtin", "-std=gnu99"]
+kenv["CPPPATH"] = [Dir("include"), Dir("arch/%s/include" % env["ARCH"]), Dir("platform/%s/include" % env["PLATFORM"])]
+kenv["CPPDEFINES"] = []
+
+sources = [
+    "console.c",
+    "panic.c",
+    "kernel.c",
+    "elf.c",
+    "syscall.c",
+    "cpu/cpu.c",
+    "cpu/irq.c",
+    "proc/process.c",
+    "proc/thread.c",
+    "proc/threadqueue.c",
+    "proc/sched.c",
+    "sync/spinlock.c",
+    "ipc/port.c",
+    "ipc/message.c",
+    "mm/map.c",
+    "mm/pmm.c",
+    "mm/vmm.c",
+    "mm/slab.c",
+    "lib/printf.c",
+    "lib/string.c",
+    "lib/hashtable.c"
+]
+
+# Architecture specific sources
+arch_sources = SConscript(dirs = ["arch/%s" % env["ARCH"]], exports = ["kenv"])
+
+# Platform specific sources
+platform_sources = SConscript(dirs = ["platform/%s" % env["PLATFORM"]], exports = ["kenv"])
+
+env["KERNEL"] = kenv.Kernel(
+    "kernel",
+    ["src/%s" % x for x in sources] + \
+    ["arch/%s/src/%s" % (env["ARCH"], x) for x in arch_sources] + \
+    ["platform/%s/src/%s" % (env["PLATFORM"], x) for x in platform_sources]
+)

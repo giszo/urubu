@@ -1,0 +1,59 @@
+# Urubu build system
+#
+# Copyright (c) 2013 Zoltan Kovacs
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License along
+# with this program; if not, write to the Free Software Foundation, Inc.,
+# 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+
+Import("env")
+
+sources = [
+    "start.c",
+    "stdio/_printf.c",
+    "stdio/vsnprintf.c",
+    "urubu/ipc.c",
+    "urubu/irq.c",
+    "urubu/debug.c"
+]
+
+# add the include directory of the C library to the global environment
+env["CPPPATH"] += [Dir("include"), Dir("include/urubu/%s" % env["ARCH"])]
+
+# Create a separate environment for C library building as it needs an extra include directory
+cenv = env.Clone()
+cenv["CPPPATH"] += [Dir("src/arch/%s" % env["ARCH"])]
+
+# Generate syscall table
+def gen_syscall_tbl(target, source, env) :
+    import syscall
+    syscall.generate_table(str(target[0]), str(source[0]))
+
+syscall_tbl = env.Command(
+    File("src/arch/%s/syscall_table.h" % env["ARCH"]),
+    "#source/kernel/src/syscall.c",
+    Action(gen_syscall_tbl, env["SCGENCOMSTR"])
+)
+
+# Build the C library
+libc = cenv.StaticLibrary(target = "c", source = ["src/%s" % x for x in sources])
+Depends(libc, syscall_tbl)
+
+# Install to the library path of GCC
+libc_install = Command(
+    "#toolchain/%s/lib/gcc/%s-pc-urubu/%s/libc.a" % (env["ARCH"], "x86_64", "4.7.3"),
+    str(libc[0]),
+    Action("cp $SOURCE $TARGET", env["CPCOMSTR"]))
+Depends(libc_install, libc)
+
+env["LIBRARIES"].append(libc_install)

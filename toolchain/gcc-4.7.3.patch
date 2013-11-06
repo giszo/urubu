@@ -1,0 +1,60 @@
+diff -ru gcc-4.7.3-orig/config.sub gcc-4.7.3/config.sub
+--- gcc-4.7.3-orig/config.sub	2012-08-06 16:34:27.000000000 +0200
++++ gcc-4.7.3/config.sub	2013-11-02 21:28:38.739207362 +0100
+@@ -4,7 +4,7 @@
+ #   2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010,
+ #   2011 Free Software Foundation, Inc.
+ 
+-timestamp='2011-10-29'
++timestamp='2013-11-02'
+ 
+ # This file is (in principle) common to ALL GNU software.
+ # The presence of a machine in this file suggests that SOME GNU software
+@@ -1353,7 +1353,7 @@
+ 	      | -os2* | -vos* | -palmos* | -uclinux* | -nucleus* \
+ 	      | -morphos* | -superux* | -rtmk* | -rtmk-nova* | -windiss* \
+ 	      | -powermax* | -dnix* | -nx6 | -nx7 | -sei* | -dragonfly* \
+-	      | -skyos* | -haiku* | -rdos* | -toppers* | -drops* | -es*)
++	      | -skyos* | -haiku* | -rdos* | -toppers* | -drops* | -es* | -urubu*)
+ 	# Remember, each alternative MUST END IN *, to match a version number.
+ 		;;
+ 	-qnx*)
+diff -ru gcc-4.7.3-orig/gcc/config.gcc gcc-4.7.3/gcc/config.gcc
+--- gcc-4.7.3-orig/gcc/config.gcc	2013-03-06 23:54:11.000000000 +0100
++++ gcc-4.7.3/gcc/config.gcc	2013-11-02 21:29:46.004209874 +0100
+@@ -772,6 +772,11 @@
+   default_use_cxa_atexit=yes
+   use_gcc_stdint=wrap
+   ;;
++*-*-urubu*)
++  gas=yes
++  gnu_ld=yes
++  default_use_cxa_atexit=yes
++  ;;
+ esac
+ 
+ case ${target} in
+@@ -1216,6 +1221,9 @@
+ x86_64-*-elf*)
+ 	tm_file="${tm_file} i386/unix.h i386/att.h dbxelf.h elfos.h newlib-stdint.h i386/i386elf.h i386/x86-64.h"
+ 	;;
++x86_64-*-urubu*)
++	tm_file="${tm_file} i386/unix.h i386/att.h dbxelf.h elfos.h i386/i386elf.h i386/x86-64.h"
++	;;
+ i[34567]86-*-freebsd*)
+ 	tm_file="${tm_file} i386/unix.h i386/att.h dbxelf.h elfos.h ${fbsd_tm_file} i386/freebsd.h"
+ 	;;
+diff -ru gcc-4.7.3-orig/libgcc/config.host gcc-4.7.3/libgcc/config.host
+--- gcc-4.7.3-orig/libgcc/config.host	2013-03-06 18:42:45.000000000 +0100
++++ gcc-4.7.3/libgcc/config.host	2013-11-02 21:30:20.073211147 +0100
+@@ -526,6 +526,10 @@
+ x86_64-*-elf*)
+ 	tmake_file="$tmake_file i386/t-crtstuff t-crtstuff-pic t-libgcc-pic"
+ 	;;
++x86_64-*-urubu*)
++	extra_parts="$extra_parts crtbegin.o crtend.o"
++	tmake_file="${tmake_file} i386/t-crtstuff"
++	;;
+ i[34567]86-*-freebsd*)
+ 	tmake_file="${tmake_file} i386/t-freebsd i386/t-crtstuff"
+ 	;;

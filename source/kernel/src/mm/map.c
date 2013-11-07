@@ -17,7 +17,9 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-// TODO: testing, a lot of!
+// TODO:
+//   - check whether a newly added region can be merged with an already existing one
+//   - testing, a lot of!
 
 #include <kernel/kernel.h>
 #include <kernel/mm/map.h>
@@ -100,6 +102,52 @@ int memory_map_add(struct memory_map* map, ptr_t base, size_t size)
 }
 
 // =====================================================================================================================
+static inline int exclude_inside(struct memory_map* map, struct memory_map_entry* item, struct memory_map_entry* e)
+{
+    ptr_t e_end = e->base + e->size - 1;
+    ptr_t item_end = item->base + item->size - 1;
+
+    if (item->base == e->base)
+    {
+	item->base += e->size;
+	item->size -= e->size;
+
+	if (item->size == 0)
+	    panic("map: invalid size after truncating entry!\n");
+    }
+    else if (item_end == e_end)
+    {
+	item->size -= e->size;
+
+	if (item->size == 0)
+	    panic("map: invalid size after truncating entry!\n");
+    }
+    else
+    {
+	// create a new item with the remaining space at the end of the current one
+	struct memory_map_entry* tmp = map->allocator->alloc();
+
+	if (!tmp)
+	    return -1;
+
+	tmp->base = e->base + e->size;
+	tmp->size = item->size - (tmp->base - item->base);
+
+	// link the new item into the map
+	tmp->next = item->next;
+	item->next = tmp;
+
+	// truncate the current item with the base of the excluded region
+	item->size = e->base - item->base;
+
+	if (item->size == 0)
+	    panic("map: invalid size after truncating entry!\n");
+    }
+
+    return 0;
+}
+
+// =====================================================================================================================
 int memory_map_exclude(struct memory_map* map, ptr_t base, size_t size)
 {
     // create an entry for the excluded region for collision checking
@@ -158,55 +206,13 @@ int memory_map_exclude(struct memory_map* map, ptr_t base, size_t size)
 	    }
 
 	    case INSIDE :
-	    {
-		ptr_t e_end = e.base + e.size - 1;
-		ptr_t item_end = item->base + item->size - 1;
+		if (exclude_inside(map, item, &e) != 0)
+		    return -1;
 
-		if (item->base == e.base)
-		{
-		    item->base += e.size;
-		    item->size -= e.size;
-
-		    if (item->size == 0)
-			panic("map: invalid size after truncating entry!\n");
-		}
-		else if (item_end == e_end)
-		{
-		    item->size -= e.size;
-
-		    if (item->size == 0)
-			panic("map: invalid size after truncating entry!\n");
-		}
-		else
-		{
-		    // create a new item with the remaining space at the end of the current one
-		    struct memory_map_entry* tmp = map->allocator->alloc();
-
-		    if (!tmp)
-			return -1;
-
-		    tmp->base = e.base + e.size;
-		    tmp->size = item->size - (tmp->base - item->base);
-
-		    // link the new item into the map
-		    tmp->next = item->next;
-		    item->next = tmp;
-
-		    // truncate the current item with the base of the excluded region
-		    item->size = e.base - item->base;
-
-		    if (item->size == 0)
-			panic("map: invalid size after truncating entry!\n");
-
-		    prev = tmp;
-		    item = tmp->next;
-
-		    // skip the normal list iteration ...
-		    continue;
-		}
+		// TODO: we should do one more additional step in the iteration here in case exclude_inside() inserted a
+		// new item because it is useless to check that one ...
 
 		break;
-	    }
 
 	    case NOTHING :
 		// nothing to do here, whew ...
@@ -254,6 +260,63 @@ ptr_t memory_map_alloc(struct memory_map* map, size_t size)
     }
 
     return p;
+}
+
+// =====================================================================================================================
+int memory_map_alloc_at(struct memory_map* map, ptr_t base, size_t size)
+{
+    struct memory_map_entry e;
+    e.base = base;
+    e.size = size;
+
+    struct memory_map_entry* prev = NULL;
+    struct memory_map_entry* item = map->list;
+
+    while (item)
+    {
+	// check whether the given memory range is inside the current item
+
+	enum entry_collision_type type = check_entry_collision(item, &e);
+
+	switch (type)
+	{
+	    case BEGIN :
+	    case END :
+		// only partial collision is detected, we are unable to allocate the whole region
+		return -1;
+
+	    case OVERLAP :
+		if (item->base == e.base && item->size == e.size)
+		{
+		    if (prev)
+			prev->next = item->next;
+		    else
+			map->list = item->next;
+
+		    map->allocator->free(item);
+
+		    return 0;
+		}
+
+		// The region we would like to allocate is overlapping the current item,
+		// so it is not totally free thus we are unable to allocate it.
+		return -1;
+
+	    case INSIDE :
+		if (exclude_inside(map, item, &e) != 0)
+		    return -1;
+
+		return 0;
+
+	    case NOTHING :
+		break;
+	}
+
+	prev = item;
+	item = item->next;
+    }
+
+    return -1;
 }
 
 // =====================================================================================================================

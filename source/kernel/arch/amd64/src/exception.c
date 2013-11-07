@@ -20,10 +20,12 @@
 #include <kernel/kernel.h>
 #include <kernel/console.h>
 #include <kernel/types.h>
+#include <kernel/cpu/cpu.h>
 
 #include <arch/cpu/cpu.h>
 
 #define UNHANDLED_EXCEPTION \
+    cpu_arch_disable_int(); \
     kprintf_unlocked("CS:EIP=%x:%p\n", ctx->cs, ctx->ip); \
     panic("%s: unhandled exception!\n", __FUNCTION__)
 

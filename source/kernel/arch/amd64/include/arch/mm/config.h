@@ -30,6 +30,10 @@
 #define PHYS_MAP_BASE 0xffff800000000000
 #define PHYS_MAP_SIZE 0x00007fff80000000
 
+// Userspace memory region base and size
+#define USER_REGION_BASE 0x0000000000000000
+#define USER_REGION_SIZE 0x0000800000000000
+
 #define PAGE_SIZE 0x1000
 #define PAGE_MASK (~(PAGE_SIZE - 1))
 

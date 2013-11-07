@@ -19,10 +19,30 @@
 
 #include <kernel/kernel.h>
 #include <kernel/mm/vmm.h>
+#include <kernel/proc/process.h>
 
 #include <arch/mm/config.h>
 
-#include <kernel/console.h>
+static struct slab_cache s_entry_cache;
+
+// =====================================================================================================================
+static struct memory_map_entry* entry_alloc()
+{
+    return (struct memory_map_entry*)slab_cache_alloc(&s_entry_cache);
+}
+
+// =====================================================================================================================
+static void entry_free(struct memory_map_entry* entry)
+{
+    slab_cache_free(&s_entry_cache, (void*)entry);
+}
+
+// =====================================================================================================================
+static struct memory_map_allocator s_map_allocator =
+{
+    .alloc = entry_alloc,
+    .free = entry_free
+};
 
 // =====================================================================================================================
 ptr_t vmm_provide_phys(ptr_t phys)
@@ -43,4 +63,119 @@ ptr_t vmm_revert_phys(ptr_t virt)
 	panic("vmm: unable to revert physical memory at %p\n", virt);
 
     return virt - PHYS_MAP_BASE;
+}
+
+// =====================================================================================================================
+int vmm_alloc(struct process* proc, ptr_t* base, size_t size, unsigned flags)
+{
+    // validate input
+    if (size & ~PAGE_MASK)
+	panic("vmm: invalid size for alloc!\n");
+
+    int r;
+
+    if (flags & VMM_FIXED)
+    {
+	if (*base & ~PAGE_MASK)
+	    panic("vmm: invalid base for fixed alloc\n");
+
+	r = memory_map_alloc_at(&proc->vmm_ctx.free_map, *base, size);
+    }
+    else
+    {
+	*base = memory_map_alloc(&proc->vmm_ctx.free_map, size);
+
+	if (*base == 0)
+	    r = -1;
+	else
+	    r = 0;
+    }
+
+    if (r != 0)
+	goto err1;
+
+    for (size_t i = 0; i < size; i += PAGE_SIZE)
+    {
+	if (vmm_arch_proc_alloc(proc, *base + i, flags) != 0)
+	    goto err2;
+    }
+
+    return 0;
+
+err2:
+    // TODO: cleanup already allocated pages, etc ...
+err1:
+    return -1;
+}
+
+// =====================================================================================================================
+int vmm_copy_to(struct process* proc, ptr_t virt, void* p, size_t size)
+{
+    uint8_t* data = (uint8_t*)p;
+
+    while (size > 0)
+    {
+	size_t off = virt & ~PAGE_MASK;
+	size_t s = min(size, PAGE_SIZE - off);
+
+	ptr_t phys;
+
+	// translate the virtual address to a physical one that we can access
+	if (vmm_arch_proc_translate(proc, virt - off, &phys) != 0)
+	    return -1;
+
+	phys = vmm_provide_phys(phys);
+
+	memcpy((uint8_t*)phys + off, data, s);
+
+	virt += s;
+	size -= s;
+	data += s;
+    }
+
+    return 0;
+}
+
+// =====================================================================================================================
+int vmm_clear(struct process* proc, ptr_t virt, size_t size)
+{
+    while (size > 0)
+    {
+	size_t off = virt & ~PAGE_MASK;
+	size_t s = min(size, PAGE_SIZE - off);
+
+	ptr_t phys;
+
+	// translate the virtual address to a physical one that we can access
+	if (vmm_arch_proc_translate(proc, virt - off, &phys) != 0)
+	    return -1;
+
+	phys = vmm_provide_phys(phys);
+
+	memset((uint8_t*)phys + off, 0, s);
+
+	virt += s;
+	size -= s;
+    }
+
+    return 0;
+}
+
+// =====================================================================================================================
+int vmm_context_init(struct vmm_context* ctx)
+{
+    memory_map_init(&ctx->free_map, &s_map_allocator);
+
+    // initialize the free map with the full userspace region and exclude the first page containing the NULL address
+    memory_map_add(&ctx->free_map, USER_REGION_BASE, USER_REGION_SIZE);
+    memory_map_exclude(&ctx->free_map, 0, PAGE_SIZE);
+
+    return 0;
+}
+
+// =====================================================================================================================
+int vmm_init()
+{
+    slab_cache_init(&s_entry_cache, sizeof(struct memory_map_entry));
+    return 0;
 }

@@ -44,11 +44,16 @@ struct process* process_create(const char* name)
     if (process_arch_create(p) != 0)
 	goto err2;
 
+    if (vmm_context_init(&p->vmm_ctx) != 0)
+	goto err3;
+
     strncpy(p->name, name, PROC_NAME_SIZE);
     p->name[PROC_NAME_SIZE - 1] = 0;
 
     return p;
 
+err3:
+    process_arch_destroy(p);
 err2:
     slab_cache_free(&s_process_cache, (void*)p);
 err1:
@@ -75,5 +80,7 @@ void process_init()
     hashtable_init(&s_process_table, process_item_key, hashtable_hash_unsigned, process_item_compare);
     slab_cache_init(&s_process_cache, sizeof(struct process));
 
-    process_create("kernel");
+    // reserve the first process for the kernel
+    struct process* kernel = process_create("kernel");
+    process_insert(kernel);
 }

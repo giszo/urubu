@@ -107,13 +107,14 @@ static void modules_start()
 	if (!entry)
 	    panic("Unable to load ELF module: %s\n", mod->name);
 
-	ptr_t stack = vmm_arch_proc_alloc(p, 0x80000000, VMM_WRITE | VMM_USER);
+	// allocate stack for the main thread
+	ptr_t stack;
 
-	if (!stack)
+	if (vmm_alloc(p, &stack, PAGE_SIZE, VMM_READ | VMM_WRITE | VMM_STACK | VMM_USER) != 0)
 	    panic("Unable to allocate stack for the main thread of the new process!\n");
 
 	// create the main thread of the loaded module
-	struct thread* t = thread_create_user(p, "main", (void*)entry, NULL, (void*)0x80000000, PAGE_SIZE);
+	struct thread* t = thread_create_user(p, "main", (void*)entry, NULL, (void*)stack, PAGE_SIZE);
 
 	if (!t)
 	    panic("Unable to create main thread for %s module\n", mod->name);

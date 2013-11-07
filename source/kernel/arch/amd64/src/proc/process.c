@@ -58,6 +58,15 @@ err1:
 }
 
 // =====================================================================================================================
+void process_arch_destroy(struct process* p)
+{
+    struct amd64_process* arch_p = (struct amd64_process*)p->arch_data;
+
+    // TODO: clean up the WHOLE virtual address space ... :-[
+    slab_cache_free(&s_arch_proc_cache, (void*)arch_p);
+}
+
+// =====================================================================================================================
 void process_arch_init()
 {
     slab_cache_init(&s_arch_proc_cache, sizeof(struct amd64_process));

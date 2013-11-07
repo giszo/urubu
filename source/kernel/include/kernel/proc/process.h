@@ -33,11 +33,15 @@ struct process
     int id;
     char name[PROC_NAME_SIZE];
 
+    // virtual memory context
+    struct vmm_context vmm_ctx;
+
     void* arch_data;
 };
 
 void process_arch_init();
 int process_arch_create(struct process* p);
+void process_arch_destroy(struct process* p);
 
 struct process* process_create(const char* name);
 

@@ -37,6 +37,7 @@ enum
 
 enum elf_shdr_flag
 {
+    ELF_SHF_WRITE = 1,
     ELF_SHF_ALLOC = 2
 };
 

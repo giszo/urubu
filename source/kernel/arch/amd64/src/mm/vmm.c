@@ -76,7 +76,7 @@ static inline uint64_t* get_pml4_entry(uint64_t* pml4, uint64_t addr, int alloc,
 	return NULL;
 
     memsetl((void*)vmm_provide_phys(p), 0, PAGE_SIZE / 4);
-    pml4[idx] = p | flags;
+    pml4[idx] = p | flags | PAGE_WRITE;
 
     return (uint64_t*)p;
 }
@@ -101,7 +101,7 @@ static inline uint64_t* get_pdp_entry(uint64_t* pdp, uint64_t addr, int alloc, u
 	return NULL;
 
     memsetl((void*)vmm_provide_phys(p), 0, PAGE_SIZE / 4);
-    pdp[idx] = p | flags;
+    pdp[idx] = p | flags | PAGE_WRITE;
 
     return (uint64_t*)p;
 }
@@ -126,7 +126,7 @@ static inline uint64_t* get_pd_entry(uint64_t* pd, uint64_t addr, int alloc, uns
 	return NULL;
 
     memsetl((void*)vmm_provide_phys(p), 0, PAGE_SIZE / 4);
-    pd[idx] = p | flags;
+    pd[idx] = p | flags | PAGE_WRITE;
 
     return (uint64_t*)p;
 }
@@ -204,14 +204,14 @@ int vmm_arch_unmap(ptr_t virt)
 }
 
 // =====================================================================================================================
-ptr_t vmm_arch_proc_alloc(struct process* proc, ptr_t virt, unsigned flags)
+int vmm_arch_proc_alloc(struct process* proc, ptr_t virt, unsigned flags)
 {
     struct amd64_process* arch_proc = (struct amd64_process*)proc->arch_data;
 
     uint64_t* pt = vmm_arch_get_pt((uint64_t*)vmm_provide_phys(arch_proc->cr3), virt, 1, get_paging_flags(flags));
 
     if (!pt)
-	return 0;
+	return -1;
 
     pt = (uint64_t*)vmm_provide_phys((ptr_t)pt);
 
@@ -219,18 +219,40 @@ ptr_t vmm_arch_proc_alloc(struct process* proc, ptr_t virt, unsigned flags)
 
     // return the entry of the page table if it is not empty
     if (pt[idx] != 0)
-	return vmm_provide_phys(pt[idx] & PAGE_MASK);
+	return -1;
 
     // allocate a physical page that will be mapped into the adderess space
     ptr_t p = pmm_alloc();
 
     if (!p)
-	return 0;
+	return -1;
 
     // map the allocated page
     pt[idx] = p | get_paging_flags(flags);
 
-    return vmm_provide_phys(p);
+    return 0;
+}
+
+// =====================================================================================================================
+int vmm_arch_proc_translate(struct process* proc, ptr_t virt, ptr_t* phys)
+{
+    struct amd64_process* arch_proc = (struct amd64_process*)proc->arch_data;
+
+    uint64_t* pt = vmm_arch_get_pt((uint64_t*)vmm_provide_phys(arch_proc->cr3), virt, 0 /* do not alloc */, 0);
+
+    if (!pt)
+	return -1;
+
+    pt = (uint64_t*)vmm_provide_phys((ptr_t)pt);
+
+    unsigned idx = PT_INDEX(virt);
+
+    if (pt[idx] == 0)
+	return -1;
+
+    *phys = pt[idx] & PAGE_MASK;
+
+    return 0;
 }
 
 // =====================================================================================================================

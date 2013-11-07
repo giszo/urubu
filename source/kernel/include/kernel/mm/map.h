@@ -50,10 +50,19 @@ struct memory_map
 
 typedef void memory_map_iterator(ptr_t, size_t);
 
+extern struct memory_map_allocator s_memory_map_slab_allocator;
+
+int memory_map_entry_alloc_init();
+
 int memory_map_add(struct memory_map* map, ptr_t base, size_t size);
 int memory_map_exclude(struct memory_map* map, ptr_t base, size_t size);
 
+// Allocates a memory region with the given size
 ptr_t memory_map_alloc(struct memory_map* map, size_t size);
+
+// Tries to allocate a memory region at the specified address with the given size
+int memory_map_alloc_at(struct memory_map* map, ptr_t base, size_t size);
+
 void memory_map_iterate(struct memory_map* map, memory_map_iterator* it);
 
 int memory_map_init(struct memory_map* map, struct memory_map_allocator* allocator);

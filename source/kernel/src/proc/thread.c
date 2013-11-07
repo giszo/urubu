@@ -17,6 +17,13 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
+/* TODO:
+ *   - thread states should be checked/updated only while holding a global lock (preferrably the scheduler lock)
+ *     to avoid situations when someone wants to wake up a thread that is running on an other CPU in an SMP system
+ *   - make sure that the current thread instance is not referenced somewhere else once it gets to the cleaner because
+ *     it will destroy it
+ */
+
 #include <kernel/console.h>
 #include <kernel/cpu/cpu.h>
 #include <kernel/proc/thread.h>

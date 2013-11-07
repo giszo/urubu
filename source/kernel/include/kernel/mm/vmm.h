@@ -46,7 +46,7 @@ struct vmm_context
 int vmm_arch_map(ptr_t virt, ptr_t phys, unsigned flags);
 int vmm_arch_unmap(ptr_t virt);
 
-int vmm_arch_proc_alloc(struct process* proc, ptr_t virt, unsigned flags);
+int vmm_arch_proc_map(struct process* proc, ptr_t virt, ptr_t phys, unsigned flags);
 int vmm_arch_proc_translate(struct process* proc, ptr_t virt, ptr_t* phys);
 
 /**
@@ -58,10 +58,13 @@ ptr_t vmm_provide_phys(ptr_t phys);
  */
 ptr_t vmm_revert_phys(ptr_t virt);
 
+int vmm_map(struct process* proc, ptr_t* base, ptr_t phys, size_t size, unsigned flags);
 int vmm_alloc(struct process* proc, ptr_t* base, size_t size, unsigned flags);
 
 int vmm_copy_to(struct process* proc, ptr_t virt, void* p, size_t size);
 int vmm_clear(struct process* proc, ptr_t virt, size_t size);
+
+long sys_vmm_map(ptr_t phys, size_t size, ptr_t* base);
 
 int vmm_context_init(struct vmm_context* ctx);
 

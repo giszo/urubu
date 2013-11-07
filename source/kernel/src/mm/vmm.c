@@ -19,7 +19,9 @@
 
 #include <kernel/kernel.h>
 #include <kernel/mm/vmm.h>
+#include <kernel/mm/pmm.h>
 #include <kernel/proc/process.h>
+#include <kernel/proc/thread.h>
 
 #include <arch/mm/config.h>
 
@@ -66,11 +68,37 @@ ptr_t vmm_revert_phys(ptr_t virt)
 }
 
 // =====================================================================================================================
+int vmm_map(struct process* proc, ptr_t* base, ptr_t phys, size_t size, unsigned flags)
+{
+    if ((phys & ~PAGE_MASK) ||
+	(size & ~PAGE_MASK))
+	return -1;
+
+    *base = memory_map_alloc(&proc->vmm_ctx.free_map, size);
+
+    if (*base == 0)
+	goto err1;
+
+    for (size_t i = 0; i < size; i += PAGE_SIZE)
+    {
+	if (vmm_arch_proc_map(proc, *base + i, phys + i, flags) != 0)
+	    goto err2;
+    }
+
+    return 0;
+
+err2:
+    // TODO: unmap already mapped pages ...
+err1:
+    return -1;
+}
+
+// =====================================================================================================================
 int vmm_alloc(struct process* proc, ptr_t* base, size_t size, unsigned flags)
 {
     // validate input
     if (size & ~PAGE_MASK)
-	panic("vmm: invalid size for alloc!\n");
+	return -1;
 
     int r;
 
@@ -96,7 +124,12 @@ int vmm_alloc(struct process* proc, ptr_t* base, size_t size, unsigned flags)
 
     for (size_t i = 0; i < size; i += PAGE_SIZE)
     {
-	if (vmm_arch_proc_alloc(proc, *base + i, flags) != 0)
+	ptr_t p = pmm_alloc();
+
+	if (!p)
+	    goto err2;
+
+	if (vmm_arch_proc_map(proc, *base + i, p, flags) != 0)
 	    goto err2;
     }
 
@@ -159,6 +192,13 @@ int vmm_clear(struct process* proc, ptr_t virt, size_t size)
     }
 
     return 0;
+}
+
+// =====================================================================================================================
+long sys_vmm_map(ptr_t phys, size_t size, ptr_t* base)
+{
+    // TODO: VMM_WRITE should be optional here
+    return vmm_map(thread_current()->proc, base, phys, size, VMM_READ | VMM_WRITE | VMM_USER);
 }
 
 // =====================================================================================================================

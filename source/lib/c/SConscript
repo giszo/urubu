@@ -24,7 +24,8 @@ sources = [
     "stdio/vsnprintf.c",
     "urubu/ipc.c",
     "urubu/irq.c",
-    "urubu/debug.c"
+    "urubu/debug.c",
+    "urubu/mm.c"
 ]
 
 # add the include directory of the C library to the global environment

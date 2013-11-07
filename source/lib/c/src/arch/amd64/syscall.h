@@ -22,6 +22,8 @@
 
 #include "syscall_table.h"
 
+#define memory_barrier() __asm__ __volatile__("" ::: "memory");
+
 static inline unsigned long syscall0(unsigned long num)
 {
     register unsigned long res;

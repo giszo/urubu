@@ -204,7 +204,7 @@ int vmm_arch_unmap(ptr_t virt)
 }
 
 // =====================================================================================================================
-int vmm_arch_proc_alloc(struct process* proc, ptr_t virt, unsigned flags)
+int vmm_arch_proc_map(struct process* proc, ptr_t virt, ptr_t phys, unsigned flags)
 {
     struct amd64_process* arch_proc = (struct amd64_process*)proc->arch_data;
 
@@ -221,14 +221,8 @@ int vmm_arch_proc_alloc(struct process* proc, ptr_t virt, unsigned flags)
     if (pt[idx] != 0)
 	return -1;
 
-    // allocate a physical page that will be mapped into the adderess space
-    ptr_t p = pmm_alloc();
-
-    if (!p)
-	return -1;
-
     // map the allocated page
-    pt[idx] = p | get_paging_flags(flags);
+    pt[idx] = phys | get_paging_flags(flags);
 
     return 0;
 }

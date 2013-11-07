@@ -18,6 +18,6 @@
 
 Import("env")
 
-terminal = env.Program(target = "terminal", source = ["src/main.c"])
+terminal = env.Program(target = "terminal", source = ["src/main.c", "src/pc_screen.c"])
 
 env["SERVERS"].append(terminal)

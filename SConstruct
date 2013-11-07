@@ -26,8 +26,8 @@ env["PLATFORM"] = "pc"
 import environment
 environment.setup(env)
 
-env["CFLAGS"] = ["-O2", "-Wall"]
-env["CXXFLAGS"] = env["CFLAGS"] + ["-std=c++11", "-fno-exceptions", "-fno-rtti"]
+env["CFLAGS"] = ["-O2", "-Wall", "-std=gnu99"]
+env["CXXFLAGS"] = ["-O2", "-Wall", "-std=c++11", "-fno-exceptions", "-fno-rtti"]
 env["CPPPATH"] = []
 
 # scan all of the SConscript files ...

@@ -57,7 +57,7 @@ int main(int argc, char** argv)
 
 	// read the scancode from the keyboard controller
 	unsigned c = inb(0x60);
-	dbprintf("c=%u\n", c);
+	//dbprintf("c=%u\n", c);
 
 	// finish the handling of the interrupt
 	irq_finished(msg.data[1] /* the IRQ number parameter */);

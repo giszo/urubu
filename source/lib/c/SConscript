@@ -22,6 +22,7 @@ sources = [
     "start.c",
     "stdio/_printf.c",
     "stdio/vsnprintf.c",
+    "string/memmove.c",
     "urubu/ipc.c",
     "urubu/irq.c",
     "urubu/debug.c",

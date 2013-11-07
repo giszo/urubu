@@ -22,8 +22,18 @@
 
 #include <kernel/mm/map.h>
 
+struct pmm_statistics
+{
+    // size of the full available system memory
+    uint64_t memory_size;
+    // size of the currently used physical memory
+    uint64_t used_size;
+};
+
 ptr_t pmm_alloc();
 void pmm_free(ptr_t p);
+
+long sys_pmm_get_statistics(struct pmm_statistics* stat);
 
 void pmm_init(size_t mem_size, struct memory_map* free_map);
 

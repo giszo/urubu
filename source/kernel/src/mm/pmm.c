@@ -69,6 +69,20 @@ void pmm_free(ptr_t p)
 }
 
 // =====================================================================================================================
+long sys_pmm_get_statistics(struct pmm_statistics* stat)
+{
+    spinlock_disable(&s_pmm_lock);
+
+    // fill statistics structure
+    stat->memory_size = s_freePageCount * PAGE_SIZE;
+    stat->used_size = s_allocatedPageCount * PAGE_SIZE;
+
+    spinunlock_enable(&s_pmm_lock);
+
+    return 0;
+}
+
+// =====================================================================================================================
 static void free_table_filler(ptr_t base, size_t size)
 {
     for (size_t s = 0; s < size; s += PAGE_SIZE)

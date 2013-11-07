@@ -1,4 +1,4 @@
-/* Urubu specific memory manager features.
+/* Urubu C library.
  *
  * Copyright (c) 2013 Zoltan Kovacs
  *
@@ -17,24 +17,30 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#include <urubu/mm.h>
-
-#include <syscall.h>
+#include <string.h>
 
 // =====================================================================================================================
-void* mm_map(void* p, size_t size)
+void* memmove(void* dest, const void* src, size_t n)
 {
-    void* base = NULL;
-    int result = syscall3(SYS_vmm_map, (unsigned long)p, size, (unsigned long)&base);
-    memory_barrier();
-    if (result != 0)
-	return NULL;
-    return base;
-}
+    char* d;
+    char* s;
 
-// =====================================================================================================================
-void mm_get_phys_stat(struct mm_phys_stat* stat)
-{
-    syscall1(SYS_pmm_get_statistics, (unsigned long)stat);
-    memory_barrier();
+    if (dest < src)
+    {
+	d = (char*)dest;
+	s = (char*)src;
+
+	while (n--)
+	    *d++ = *s++;
+    }
+    else
+    {
+	d = (char*)dest + n;
+	s = (char*)src + n;
+
+	while (n--)
+	    *--d = *--s;
+    }
+
+    return dest;
 }

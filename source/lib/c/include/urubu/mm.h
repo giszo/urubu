@@ -21,13 +21,24 @@
 #define _URUBU_MM_H_
 
 #include <stddef.h>
+#include <stdint.h>
 
 #ifdef __cplusplus
 extern "C"
 {
 #endif
 
+struct mm_phys_stat
+{
+    // size of the full available system memory
+    uint64_t memory_size;
+    // size of the currently used physical memory
+    uint64_t used_size;
+};
+
 void* mm_map(void* p, size_t size);
+
+void mm_get_phys_stat(struct mm_phys_stat* stat);
 
 #ifdef __cplusplus
 }

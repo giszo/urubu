@@ -31,7 +31,7 @@ kenv["BUILDERS"]["Kernel"] = Builder(
     src_builder = "Object"
 )
 
-kenv["CFLAGS"] += ["-fno-builtin", "-std=gnu99"]
+kenv["CFLAGS"] += ["-fno-builtin"]
 kenv["CPPPATH"] = [Dir("include"), Dir("arch/%s/include" % env["ARCH"]), Dir("platform/%s/include" % env["PLATFORM"])]
 kenv["CPPDEFINES"] = []
 

@@ -21,6 +21,7 @@
 #include <kernel/cpu/irq.h>
 #include <kernel/ipc/port.h>
 #include <kernel/mm/vmm.h>
+#include <kernel/mm/pmm.h>
 
 struct syscall_entry
 {
@@ -49,6 +50,7 @@ static struct syscall_entry s_syscall_table[] =
     {"irq_finished", sys_irq_finished},
 
     // memory management
+    {"pmm_get_statistics", sys_pmm_get_statistics},
     {"vmm_map", sys_vmm_map},
 
     {"dprintf", sys_dprintf}

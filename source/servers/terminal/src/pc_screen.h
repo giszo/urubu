@@ -1,4 +1,4 @@
-/* Urubu specific memory manager features.
+/* Terminal driver.
  *
  * Copyright (c) 2013 Zoltan Kovacs
  *
@@ -17,24 +17,9 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#include <urubu/mm.h>
+#ifndef TERMIANL_PC_SCREEN_H_INCLUDED
+#define TERMIANL_PC_SCREEN_H_INCLUDED
 
-#include <syscall.h>
+int pc_screen_install();
 
-// =====================================================================================================================
-void* mm_map(void* p, size_t size)
-{
-    void* base = NULL;
-    int result = syscall3(SYS_vmm_map, (unsigned long)p, size, (unsigned long)&base);
-    memory_barrier();
-    if (result != 0)
-	return NULL;
-    return base;
-}
-
-// =====================================================================================================================
-void mm_get_phys_stat(struct mm_phys_stat* stat)
-{
-    syscall1(SYS_pmm_get_statistics, (unsigned long)stat);
-    memory_barrier();
-}
+#endif

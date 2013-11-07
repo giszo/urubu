@@ -21,6 +21,7 @@
 #include <kernel/cpu/cpu.h>
 #include <kernel/proc/thread.h>
 #include <kernel/proc/sched.h>
+#include <kernel/proc/threadqueue.h>
 #include <kernel/mm/slab.h>
 #include <kernel/mm/pmm.h>
 #include <kernel/mm/vmm.h>
@@ -29,6 +30,11 @@
 static int s_next_thread_id = 0;
 static struct hashtable s_thread_table;
 static struct slab_cache s_thread_cache;
+
+// Thread cleanup queue
+static struct spinlock s_cleanup_lock = SPINLOCK_INIT("cleanup");
+static struct threadqueue s_cleanup_queue;
+static struct thread* s_cleaner_thread = NULL;
 
 // =====================================================================================================================
 static struct thread* thread_create(const char* name)
@@ -98,9 +104,29 @@ static int thread_item_compare(const void* k1, const void* k2)
 }
 
 // =====================================================================================================================
-void thread_kernel_exit()
+void thread_exit()
 {
-    kprintf("thread: exiting ...\n");
+    struct thread* t;
+
+    spinlock_disable(&s_cleanup_lock);
+
+    // interrupts are not disabled so it is safe to update the state of the thread
+    t = thread_current();
+    t->state = DEAD;
+
+    // put the current thread into the cleanup queue
+    threadqueue_add(&s_cleanup_queue, t);
+
+    // release the cleanup queue lock but DO NOT enable interrupts
+    spinunlock(&s_cleanup_lock);
+
+    // wake up the cleaner thread because it has a little work to do
+    thread_wake_up(s_cleaner_thread);
+
+    // switch to another thread and let the cleaner do the rest of the job :)
+    sched_yield();
+
+    // this should never be reached, hopefully ...
     while (1) ;
 }
 
@@ -183,9 +209,43 @@ int thread_wake_up(struct thread* t)
 }
 
 // =====================================================================================================================
+long sys_thread_exit(int code)
+{
+    thread_exit();
+    return 0;
+}
+
+// =====================================================================================================================
+static void thread_cleaner()
+{
+    while (1)
+    {
+	struct thread* t;
+
+	// get a new thread to destroy, muhaha :)
+	spinlock_disable(&s_cleanup_lock);
+	t = threadqueue_pop(&s_cleanup_queue);
+	spinunlock_enable(&s_cleanup_lock);
+
+	// check whether we have something to work on ...
+	if (!t)
+	{
+	    thread_sleep();
+	    continue;
+	}
+
+	// TODO cleanup ...
+    }
+}
+
+// =====================================================================================================================
 void thread_init()
 {
     thread_arch_init();
     hashtable_init(&s_thread_table, thread_item_key, hashtable_hash_unsigned, thread_item_compare);
     slab_cache_init(&s_thread_cache, sizeof(struct thread));
+
+    // initialize thread cleanup queue and thread
+    threadqueue_init(&s_cleanup_queue);
+    s_cleaner_thread = thread_create_kernel("cleaner", thread_cleaner, NULL);
 }

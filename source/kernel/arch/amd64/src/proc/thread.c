@@ -56,7 +56,7 @@ int thread_arch_create_kernel(struct thread* t, void* entry, void* arg)
 
     // allocate space for the return address on the stack
     p -= sizeof(uint64_t);
-    ((uint64_t*)p)[0] = (uint64_t)thread_kernel_exit;
+    ((uint64_t*)p)[0] = (uint64_t)thread_exit;
 
     // allocate an IRQ context on the stack
     p -= sizeof(struct irq_context);

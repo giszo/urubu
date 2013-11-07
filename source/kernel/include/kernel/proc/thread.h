@@ -34,7 +34,8 @@ enum thread_state
     CREATED,
     SLEEPING,
     READY,
-    RUNNING
+    RUNNING,
+    DEAD
 };
 
 struct thread
@@ -64,7 +65,8 @@ void thread_arch_destroy(struct thread* t);
 int thread_arch_create_kernel(struct thread* t, void* entry, void* arg);
 int thread_arch_create_user(struct thread* t, void* entry, void* arg);
 
-void thread_kernel_exit();
+// Terminates the execution of the current thread
+void thread_exit();
 
 struct thread* thread_create_kernel(const char* name, void* entry, void* arg);
 struct thread* thread_create_user(struct process* p, const char* name, void* entry, void* arg, void* stack, size_t stack_size);
@@ -73,6 +75,8 @@ struct thread* thread_current();
 
 int thread_sleep();
 int thread_wake_up(struct thread* t);
+
+long sys_thread_exit(int code);
 
 void thread_init();
 

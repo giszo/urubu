@@ -1,4 +1,4 @@
-/* Urubu C library.
+/* Thread handling.
  *
  * Copyright (c) 2013 Zoltan Kovacs
  *
@@ -19,14 +19,10 @@
 
 #include <urubu/thread.h>
 
-extern int main(int argc, char** argv);
+#include <syscall.h>
 
 // =====================================================================================================================
-void __libc_start_main()
+void thread_exit(int code)
 {
-    // no parameters for now :)
-    int ret = main(0, 0);
-
-    // exit from the main thread
-    thread_exit(ret);
+    syscall1(SYS_thread_exit, code);
 }

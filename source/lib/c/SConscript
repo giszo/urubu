@@ -26,7 +26,8 @@ sources = [
     "urubu/ipc.c",
     "urubu/irq.c",
     "urubu/debug.c",
-    "urubu/mm.c"
+    "urubu/mm.c",
+    "urubu/thread.c"
 ]
 
 # add the include directory of the C library to the global environment

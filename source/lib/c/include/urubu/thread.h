@@ -1,4 +1,4 @@
-/* Urubu C library.
+/* Thread handling.
  *
  * Copyright (c) 2013 Zoltan Kovacs
  *
@@ -17,16 +17,19 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#include <urubu/thread.h>
+#ifndef _URUBU_THREAD_H_
+#define _URUBU_THREAD_H_
 
-extern int main(int argc, char** argv);
-
-// =====================================================================================================================
-void __libc_start_main()
+#ifdef __cplusplus
+extern "C"
 {
-    // no parameters for now :)
-    int ret = main(0, 0);
+#endif
 
-    // exit from the main thread
-    thread_exit(ret);
+// TODO: add noreturn attribute
+void thread_exit(int code);
+
+#ifdef __cplusplus
 }
+#endif
+
+#endif

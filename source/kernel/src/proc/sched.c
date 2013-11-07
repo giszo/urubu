@@ -50,6 +50,7 @@ struct thread* sched_next(struct cpu* curr_cpu, struct thread* curr)
 		break;
 
 	    case SLEEPING :
+	    case DEAD :
 		break;
 
 	    default :

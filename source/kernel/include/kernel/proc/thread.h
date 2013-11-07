@@ -59,6 +59,12 @@ struct thread
     void* arch_data;
 };
 
+struct thread_statistics
+{
+    // number of threads in the system
+    uint64_t number;
+};
+
 void thread_arch_init();
 int thread_arch_create(struct thread* t);
 void thread_arch_destroy(struct thread* t);
@@ -77,6 +83,7 @@ int thread_sleep();
 int thread_wake_up(struct thread* t);
 
 long sys_thread_exit(int code);
+long sys_thread_get_statistics(struct thread_statistics* stat);
 
 void thread_init();
 

@@ -30,6 +30,7 @@
 static int s_next_thread_id = 0;
 static struct hashtable s_thread_table;
 static struct slab_cache s_thread_cache;
+static struct spinlock s_thread_lock = SPINLOCK_INIT("threads");
 
 // Thread cleanup queue
 static struct spinlock s_cleanup_lock = SPINLOCK_INIT("cleanup");
@@ -65,6 +66,12 @@ static struct thread* thread_create(const char* name)
     strncpy(t->name, name, THREAD_NAME_SIZE);
     t->name[THREAD_NAME_SIZE - 1] = 0;
 
+    // insert the new thread to the global table
+    spinlock_disable(&s_thread_lock);
+    t->id = s_next_thread_id++;
+    hashtable_add(&s_thread_table, (struct hashitem*)t);
+    spinunlock_enable(&s_thread_lock);
+
     return t;
 
 err3:
@@ -81,13 +88,6 @@ static void thread_destroy(struct thread* t)
     pmm_free(vmm_revert_phys((ptr_t)t->kernel_stack));
     thread_arch_destroy(t);
     slab_cache_free(&s_thread_cache, (void*)t);
-}
-
-// =====================================================================================================================
-static void thread_insert(struct thread* t)
-{
-    t->id = s_next_thread_id++;
-    hashtable_add(&s_thread_table, (struct hashitem*)t);
 }
 
 // =====================================================================================================================
@@ -141,8 +141,6 @@ struct thread* thread_create_kernel(const char* name, void* entry, void* arg)
     if (thread_arch_create_kernel(t, entry, arg) != 0)
 	goto err2;
 
-    thread_insert(t);
-
     return t;
 
 err2:
@@ -167,8 +165,6 @@ struct thread* thread_create_user(struct process* p, const char* name, void* ent
 
     if (thread_arch_create_user(t, entry, arg) != 0)
 	goto err2;
-
-    thread_insert(t);
 
     return t;
 
@@ -212,6 +208,18 @@ int thread_wake_up(struct thread* t)
 long sys_thread_exit(int code)
 {
     thread_exit();
+    return 0;
+}
+
+// =====================================================================================================================
+long sys_thread_get_statistics(struct thread_statistics* stat)
+{
+    spinlock_disable(&s_thread_lock);
+
+    stat->number = hashtable_size(&s_thread_table);
+
+    spinunlock_enable(&s_thread_lock);
+
     return 0;
 }
 

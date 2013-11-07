@@ -24,14 +24,7 @@
 static int s_next_process_id = 0;
 static struct hashtable s_process_table;
 static struct slab_cache s_process_cache;
-
-// =====================================================================================================================
-static int process_insert(struct process* p)
-{
-    p->id = s_next_process_id++;
-    hashtable_add(&s_process_table, (struct hashitem*)p);
-    return 0;
-}
+static struct spinlock s_process_lock = SPINLOCK_INIT("process");
 
 // =====================================================================================================================
 struct process* process_create(const char* name)
@@ -49,6 +42,12 @@ struct process* process_create(const char* name)
 
     strncpy(p->name, name, PROC_NAME_SIZE);
     p->name[PROC_NAME_SIZE - 1] = 0;
+
+    // insert the process to the global table
+    spinlock_disable(&s_process_lock);
+    p->id = s_next_process_id++;
+    hashtable_add(&s_process_table, (struct hashitem*)p);
+    spinunlock_enable(&s_process_lock);
 
     return p;
 
@@ -81,6 +80,5 @@ void process_init()
     slab_cache_init(&s_process_cache, sizeof(struct process));
 
     // reserve the first process for the kernel
-    struct process* kernel = process_create("kernel");
-    process_insert(kernel);
+    process_create("kernel");
 }

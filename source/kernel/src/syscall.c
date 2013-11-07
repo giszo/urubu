@@ -56,6 +56,7 @@ static struct syscall_entry s_syscall_table[] =
 
     // threading
     {"thread_exit", sys_thread_exit},
+    {"thread_get_statistics", sys_thread_get_statistics},
 
     {"dprintf", sys_dprintf}
 };

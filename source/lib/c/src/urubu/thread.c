@@ -26,3 +26,10 @@ void thread_exit(int code)
 {
     syscall1(SYS_thread_exit, code);
 }
+
+// =====================================================================================================================
+void thread_get_statistics(struct thread_stat* stat)
+{
+    syscall1(SYS_thread_get_statistics, (unsigned long)stat);
+    memory_barrier();
+}

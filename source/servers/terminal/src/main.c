@@ -21,6 +21,7 @@
 
 #include <urubu/mm.h>
 #include <urubu/debug.h>
+#include <urubu/thread.h>
 
 #include "screen.h"
 #include "pc_screen.h"
@@ -63,9 +64,12 @@ int main(int argc, char** argv)
     // display some kind of system statistics for now on the screen ...
     struct mm_phys_stat ps;
     mm_get_phys_stat(&ps);
-
     screen_printf("System memory: %llu bytes\n", ps.memory_size);
     screen_printf("Used memory: %llu bytes\n", ps.used_size);
+
+    struct thread_stat ts;
+    thread_get_statistics(&ts);
+    screen_printf("Number of threads: %llu\n", ts.number);
 
     return 0;
 }

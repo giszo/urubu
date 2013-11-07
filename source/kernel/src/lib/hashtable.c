@@ -55,6 +55,8 @@ void hashtable_add(struct hashtable* table, struct hashitem* item)
 
     item->next = table->table[idx];
     table->table[idx] = item;
+
+    ++table->items;
 }
 
 // =====================================================================================================================
@@ -78,6 +80,12 @@ struct hashitem* hashtable_get(struct hashtable* table, const void* key)
 }
 
 // =====================================================================================================================
+size_t hashtable_size(struct hashtable* t)
+{
+    return t->items;
+}
+
+// =====================================================================================================================
 void hashtable_init(struct hashtable* t, key_func_t* key, hash_func_t* hash, compare_func_t* compare)
 {
     ptr_t p = pmm_alloc();
@@ -87,6 +95,7 @@ void hashtable_init(struct hashtable* t, key_func_t* key, hash_func_t* hash, com
 
     t->table = (struct hashitem**)vmm_provide_phys(p);
     t->size = PAGE_SIZE / sizeof(struct hashitem*);
+    t->items = 0;
     t->key = key;
     t->hash = hash;
     t->compare = compare;

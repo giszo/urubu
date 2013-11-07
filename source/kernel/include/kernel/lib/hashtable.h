@@ -35,7 +35,10 @@ typedef int compare_func_t(const void* k1, const void* k2);
 struct hashtable
 {
     struct hashitem** table;
+    // the size of the table
     size_t size;
+    // number of items in the table
+    size_t items;
 
     key_func_t* key;
     hash_func_t* hash;
@@ -46,6 +49,8 @@ unsigned hashtable_hash_unsigned(const void* k);
 
 void hashtable_add(struct hashtable* table, struct hashitem* item);
 struct hashitem* hashtable_get(struct hashtable* table, const void* key);
+
+size_t hashtable_size(struct hashtable* t);
 
 void hashtable_init(struct hashtable* t, key_func_t* key, hash_func_t* hash, compare_func_t* compare);
 

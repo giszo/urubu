@@ -20,13 +20,22 @@
 #ifndef _URUBU_THREAD_H_
 #define _URUBU_THREAD_H_
 
+#include <stdint.h>
+
 #ifdef __cplusplus
 extern "C"
 {
 #endif
 
+struct thread_stat
+{
+    // number of threads in the system
+    uint64_t number;
+};
+
 // TODO: add noreturn attribute
 void thread_exit(int code);
+void thread_get_statistics(struct thread_stat* stat);
 
 #ifdef __cplusplus
 }

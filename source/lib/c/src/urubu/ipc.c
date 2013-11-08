@@ -30,5 +30,19 @@ int ipc_port_create()
 // =====================================================================================================================
 int ipc_port_receive(int port, struct ipc_message* msg)
 {
-    return syscall2(SYS_ipc_port_receive, port, (unsigned long)msg);
+    int r = syscall2(SYS_ipc_port_receive, port, (unsigned long)msg);
+    memory_barrier();
+    return r;
+}
+
+// =====================================================================================================================
+int ipc_port_send_broadcast(unsigned broadcast, struct ipc_message* msg)
+{
+    return syscall2(SYS_ipc_port_send_broadcast, broadcast, (unsigned long)msg);
+}
+
+// =====================================================================================================================
+int ipc_port_set_broadcast_mask(int port, unsigned mask)
+{
+    return syscall2(SYS_ipc_port_set_broadcast_mask, port, mask);
 }

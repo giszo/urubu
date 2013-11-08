@@ -45,10 +45,13 @@ struct hashtable
     compare_func_t* compare;
 };
 
+typedef void hashtable_iterator(struct hashitem*, void*);
+
 unsigned hashtable_hash_unsigned(const void* k);
 
 void hashtable_add(struct hashtable* table, struct hashitem* item);
 struct hashitem* hashtable_get(struct hashtable* table, const void* key);
+void hashtable_iterate(struct hashtable* t, hashtable_iterator* it, void* data);
 
 size_t hashtable_size(struct hashtable* t);
 

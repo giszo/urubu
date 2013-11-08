@@ -23,6 +23,9 @@
 #include <stddef.h>
 #include <stdint.h>
 
+// TODO: move this to some architecture specific header
+#define PAGE_SIZE 4096
+
 #ifdef __cplusplus
 extern "C"
 {
@@ -37,6 +40,7 @@ struct mm_phys_stat
 };
 
 void* mm_map(void* p, size_t size);
+void* mm_alloc(size_t size);
 
 void mm_get_phys_stat(struct mm_phys_stat* stat);
 

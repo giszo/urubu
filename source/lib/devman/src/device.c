@@ -1,4 +1,4 @@
-/* Inter process communication.
+/* Device manager library.
  *
  * Copyright (c) 2013 Zoltan Kovacs
  *
@@ -17,41 +17,17 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef _URUBU_IPC_H_
-#define _URUBU_IPC_H_
+#include <libdevman/device.h>
 
-#include <stdint.h>
+#include <urubu/ipc.h>
 
-#ifdef __cplusplus
-extern "C"
+// =====================================================================================================================
+int device_announce(enum device_type type, int port)
 {
-#endif
+    struct ipc_message msg;
+    msg.data[0] = MSG_ANNOUNCE_DEVICE;
+    msg.data[1] = type;
+    msg.data[2] = port;
 
-// possible IPC message identifiers
-enum
-{
-    MSG_ANNOUNCE_DEVICE = 1000
-};
-
-// possible bits of IPC broadcast mask
-enum
-{
-    IPC_BROADCAST_DEVICE = 1
-};
-
-struct ipc_message
-{
-    uint64_t data[6];
-} __attribute__((packed));
-
-int ipc_port_create();
-int ipc_port_receive(int port, struct ipc_message* msg);
-int ipc_port_send_broadcast(unsigned broadcast, struct ipc_message* msg);
-
-int ipc_port_set_broadcast_mask(int port, unsigned mask);
-
-#ifdef __cplusplus
+    return ipc_port_send_broadcast(IPC_BROADCAST_DEVICE, &msg);
 }
-#endif
-
-#endif

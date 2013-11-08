@@ -237,6 +237,13 @@ long sys_vmm_map(ptr_t phys, size_t size, ptr_t* base)
 }
 
 // =====================================================================================================================
+long sys_vmm_alloc(size_t size, ptr_t* base)
+{
+    // TODO: VMM_WRITE should be optional here
+    return vmm_alloc(thread_current()->proc, base, size, VMM_READ | VMM_WRITE | VMM_USER);
+}
+
+// =====================================================================================================================
 int vmm_context_init(struct vmm_context* ctx)
 {
     memory_map_init(&ctx->free_map, &s_map_allocator);

@@ -1,4 +1,4 @@
-/* Inter process communication.
+/* SLAB allocator.
  *
  * Copyright (c) 2013 Zoltan Kovacs
  *
@@ -17,41 +17,41 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef _URUBU_IPC_H_
-#define _URUBU_IPC_H_
+#ifndef _LIBSLAB_CACHE_H_
+#define _LIBSLAB_CACHE_H_
 
-#include <stdint.h>
+#include <stddef.h>
 
-#ifdef __cplusplus
-extern "C"
+struct slab;
+struct slab_buffer;
+
+struct slab_cache
 {
-#endif
+    size_t slab_size;
+    size_t obj_size;
+    size_t obj_per_slab;
 
-// possible IPC message identifiers
-enum
-{
-    MSG_ANNOUNCE_DEVICE = 1000
+    struct slab* slab_full;
+    struct slab* slab_partial;
 };
 
-// possible bits of IPC broadcast mask
-enum
+struct slab
 {
-    IPC_BROADCAST_DEVICE = 1
+    struct slab* next;
+    struct slab_cache* cache;
+    void* base;
+    struct slab_buffer* free_list;
+    size_t free_count;
 };
 
-struct ipc_message
+struct slab_buffer
 {
-    uint64_t data[6];
-} __attribute__((packed));
+    struct slab_buffer* next;
+};
 
-int ipc_port_create();
-int ipc_port_receive(int port, struct ipc_message* msg);
-int ipc_port_send_broadcast(unsigned broadcast, struct ipc_message* msg);
+int slab_cache_init(struct slab_cache* cache, size_t obj_size);
 
-int ipc_port_set_broadcast_mask(int port, unsigned mask);
-
-#ifdef __cplusplus
-}
-#endif
+void* slab_cache_alloc(struct slab_cache* cache);
+void slab_cache_free(struct slab_cache* cache, void* p);
 
 #endif

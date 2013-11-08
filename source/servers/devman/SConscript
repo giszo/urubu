@@ -18,4 +18,6 @@
 
 Import("env")
 
-SConscript(dirs = ["devman", "terminal"], exports = ["env"])
+devman = env.Program(target = "devman", source = ["src/main.c"], LIBS = ["slab"])
+
+env["SERVERS"].append(devman)

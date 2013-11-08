@@ -45,6 +45,8 @@ static struct syscall_entry s_syscall_table[] =
     // IPC
     {"ipc_port_create", sys_ipc_port_create},
     {"ipc_port_receive", sys_ipc_port_receive},
+    {"ipc_port_send_broadcast", sys_ipc_port_send_broadcast},
+    {"ipc_port_set_broadcast_mask", sys_ipc_port_set_broadcast_mask},
 
     // IRQ
     {"irq_register", sys_irq_register},
@@ -53,6 +55,7 @@ static struct syscall_entry s_syscall_table[] =
     // memory management
     {"pmm_get_statistics", sys_pmm_get_statistics},
     {"vmm_map", sys_vmm_map},
+    {"vmm_alloc", sys_vmm_alloc},
 
     // threading
     {"thread_exit", sys_thread_exit},

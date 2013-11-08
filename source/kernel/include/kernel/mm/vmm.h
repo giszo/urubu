@@ -68,6 +68,7 @@ int vmm_copy_to(struct process* proc, ptr_t virt, void* p, size_t size);
 int vmm_clear(struct process* proc, ptr_t virt, size_t size);
 
 long sys_vmm_map(ptr_t phys, size_t size, ptr_t* base);
+long sys_vmm_alloc(size_t size, ptr_t* base);
 
 int vmm_context_init(struct vmm_context* ctx);
 

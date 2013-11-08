@@ -80,6 +80,21 @@ struct hashitem* hashtable_get(struct hashtable* table, const void* key)
 }
 
 // =====================================================================================================================
+void hashtable_iterate(struct hashtable* t, hashtable_iterator* it, void* data)
+{
+    for (size_t i = 0; i < t->size; ++i)
+    {
+	struct hashitem* item = t->table[i];
+
+	while (item)
+	{
+	    it(item, data);
+	    item = item->next;
+	}
+    }
+}
+
+// =====================================================================================================================
 size_t hashtable_size(struct hashtable* t)
 {
     return t->items;

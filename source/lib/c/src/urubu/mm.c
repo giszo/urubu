@@ -33,6 +33,17 @@ void* mm_map(void* p, size_t size)
 }
 
 // =====================================================================================================================
+void* mm_alloc(size_t size)
+{
+    void* base = NULL;
+    int result = syscall2(SYS_vmm_alloc, size, (unsigned long)&base);
+    memory_barrier();
+    if (result != 0)
+	return NULL;
+    return base;
+}
+
+// =====================================================================================================================
 void mm_get_phys_stat(struct mm_phys_stat* stat)
 {
     syscall1(SYS_pmm_get_statistics, (unsigned long)stat);

@@ -23,6 +23,7 @@
 #include <kernel/types.h>
 #include <kernel/mm/map.h>
 #include <kernel/mm/slab.h>
+#include <kernel/sync/mutex.h>
 
 struct process;
 
@@ -41,6 +42,8 @@ struct vmm_context
 {
     // map used for tracking free regions in the address space
     struct memory_map free_map;
+
+    struct mutex lock;
 };
 
 int vmm_arch_map(ptr_t virt, ptr_t phys, unsigned flags);

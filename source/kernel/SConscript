@@ -48,6 +48,7 @@ sources = [
     "proc/threadqueue.c",
     "proc/sched.c",
     "sync/spinlock.c",
+    "sync/mutex.c",
     "ipc/port.c",
     "ipc/message.c",
     "mm/map.c",

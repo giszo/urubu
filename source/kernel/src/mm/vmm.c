@@ -74,22 +74,31 @@ int vmm_map(struct process* proc, ptr_t* base, ptr_t phys, size_t size, unsigned
 	(size & ~PAGE_MASK))
 	return -1;
 
-    *base = memory_map_alloc(&proc->vmm_ctx.free_map, size);
+    struct vmm_context* ctx = &proc->vmm_ctx;
+
+    mutex_lock(&ctx->lock);
+
+    // allocate a region in the virtual address space
+    *base = memory_map_alloc(&ctx->free_map, size);
 
     if (*base == 0)
 	goto err1;
 
+    // map the required pages
     for (size_t i = 0; i < size; i += PAGE_SIZE)
     {
 	if (vmm_arch_proc_map(proc, *base + i, phys + i, flags) != 0)
 	    goto err2;
     }
 
+    mutex_unlock(&ctx->lock);
+
     return 0;
 
 err2:
     // TODO: unmap already mapped pages ...
 err1:
+    mutex_unlock(&ctx->lock);
     return -1;
 }
 
@@ -99,6 +108,10 @@ int vmm_alloc(struct process* proc, ptr_t* base, size_t size, unsigned flags)
     // validate input
     if (size & ~PAGE_MASK)
 	return -1;
+
+    struct vmm_context* ctx = &proc->vmm_ctx;
+
+    mutex_lock(&ctx->lock);
 
     int r;
 
@@ -133,11 +146,14 @@ int vmm_alloc(struct process* proc, ptr_t* base, size_t size, unsigned flags)
 	    goto err2;
     }
 
+    mutex_unlock(&ctx->lock);
+
     return 0;
 
 err2:
     // TODO: cleanup already allocated pages, etc ...
 err1:
+    mutex_unlock(&ctx->lock);
     return -1;
 }
 
@@ -145,6 +161,9 @@ err1:
 int vmm_copy_to(struct process* proc, ptr_t virt, void* p, size_t size)
 {
     uint8_t* data = (uint8_t*)p;
+    struct vmm_context* ctx = &proc->vmm_ctx;
+
+    mutex_lock(&ctx->lock);
 
     while (size > 0)
     {
@@ -155,7 +174,7 @@ int vmm_copy_to(struct process* proc, ptr_t virt, void* p, size_t size)
 
 	// translate the virtual address to a physical one that we can access
 	if (vmm_arch_proc_translate(proc, virt - off, &phys) != 0)
-	    return -1;
+	    goto err1;
 
 	phys = vmm_provide_phys(phys);
 
@@ -166,12 +185,22 @@ int vmm_copy_to(struct process* proc, ptr_t virt, void* p, size_t size)
 	data += s;
     }
 
+    mutex_unlock(&ctx->lock);
+
     return 0;
+
+err1:
+    mutex_unlock(&ctx->lock);
+    return -1;
 }
 
 // =====================================================================================================================
 int vmm_clear(struct process* proc, ptr_t virt, size_t size)
 {
+    struct vmm_context* ctx = &proc->vmm_ctx;
+
+    mutex_lock(&ctx->lock);
+
     while (size > 0)
     {
 	size_t off = virt & ~PAGE_MASK;
@@ -181,7 +210,7 @@ int vmm_clear(struct process* proc, ptr_t virt, size_t size)
 
 	// translate the virtual address to a physical one that we can access
 	if (vmm_arch_proc_translate(proc, virt - off, &phys) != 0)
-	    return -1;
+	    goto err1;
 
 	phys = vmm_provide_phys(phys);
 
@@ -191,7 +220,13 @@ int vmm_clear(struct process* proc, ptr_t virt, size_t size)
 	size -= s;
     }
 
+    mutex_unlock(&ctx->lock);
+
     return 0;
+
+err1:
+    mutex_unlock(&ctx->lock);
+    return -1;
 }
 
 // =====================================================================================================================
@@ -209,6 +244,8 @@ int vmm_context_init(struct vmm_context* ctx)
     // initialize the free map with the full userspace region and exclude the first page containing the NULL address
     memory_map_add(&ctx->free_map, USER_REGION_BASE, USER_REGION_SIZE);
     memory_map_exclude(&ctx->free_map, 0, PAGE_SIZE);
+
+    mutex_init(&ctx->lock);
 
     return 0;
 }

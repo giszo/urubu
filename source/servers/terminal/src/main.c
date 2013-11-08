@@ -19,20 +19,11 @@
 
 #include <stdio.h>
 
+#include <libdevman/device.h>
+
 #include <urubu/mm.h>
 #include <urubu/debug.h>
 #include <urubu/thread.h>
-
-#include "screen.h"
-#include "pc_screen.h"
-
-static struct screen* s_screen = NULL;
-
-// =====================================================================================================================
-void screen_install(struct screen* s)
-{
-    s_screen = s;
-}
 
 // =====================================================================================================================
 void screen_printf(const char* fmt, ...)
@@ -44,29 +35,29 @@ void screen_printf(const char* fmt, ...)
     vsnprintf(buf, sizeof(buf), fmt, args);
     va_end(args);
 
-    for (unsigned i = 0; buf[i]; ++i)
-	s_screen->putc(buf[i]);
+    //for (unsigned i = 0; buf[i]; ++i)
+    //s_screen->putc(buf[i]);
 }
 
 // =====================================================================================================================
 int main(int argc, char** argv)
 {
-    // install the PC screen backend
-    if (pc_screen_install() != 0)
+    // wait for a screen type device to get registered
+    struct device_info info;
+
+    if (device_lookup(SCREEN, 1, &info) != 0)
     {
-	dbprintf("terminal: unable to install screen backend!\n");
+	dbprintf("terminal: unable to get screen!\n");
 	return -1;
     }
 
-    // clear the screen now ...
-    s_screen->clear();
+    dbprintf("terminal: found screen at port %d\n", info.port);
 
     // display some kind of system statistics for now on the screen ...
     struct mm_phys_stat ps;
     mm_get_phys_stat(&ps);
     screen_printf("System memory: %llu bytes\n", ps.memory_size);
     screen_printf("Used memory: %llu bytes\n", ps.used_size);
-
     struct thread_stat ts;
     thread_get_statistics(&ts);
     screen_printf("Number of threads: %llu\n", ts.number);

@@ -80,6 +80,35 @@ struct hashitem* hashtable_get(struct hashtable* table, const void* key)
 }
 
 // =====================================================================================================================
+struct hashitem* hashtable_remove(struct hashtable* t, const void* key)
+{
+    uint32_t idx = t->hash(key) % t->size;
+
+    struct hashitem* prev = NULL;
+    struct hashitem* item = t->table[idx];
+
+    while (item)
+    {
+	const void* k = t->key(item);
+
+	if (t->compare(key, k))
+	{
+	    if (prev)
+		prev->next = item->next;
+	    else
+		t->table[idx] = item->next;
+
+	    return item;
+	}
+
+	prev = item;
+	item = item->next;
+    }
+
+    return NULL;
+}
+
+// =====================================================================================================================
 void hashtable_iterate(struct hashtable* t, hashtable_iterator* it, void* data)
 {
     for (size_t i = 0; i < t->size; ++i)

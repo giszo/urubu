@@ -18,4 +18,6 @@
 
 Import("env")
 
-SConscript(dirs = ["input", "video"], exports = ["env"])
+screen = env.Program(target = "screen", source = ["src/main.c"], LIBS = ["devman"])
+
+env["DRIVERS"].append(screen)

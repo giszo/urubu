@@ -31,3 +31,43 @@ int device_announce(enum device_type type, int port)
 
     return ipc_port_send_broadcast(IPC_BROADCAST_DEVICE, &msg);
 }
+
+// =====================================================================================================================
+int device_lookup(enum device_type type, int wait, struct device_info* info)
+{
+    int p;
+    struct ipc_message req;
+    struct ipc_message rep;
+
+    // create a port for getting the reply
+    p = ipc_port_create();
+
+    if (p < 0)
+	return -1;
+
+    req.data[0] = MSG_LOOKUP_DEVICE;
+    req.data[1] = type;
+    req.data[2] = wait;
+    req.data[3] = p;
+
+    if (ipc_port_send_broadcast(IPC_BROADCAST_DEVICE, &req) != 0)
+	goto err;
+
+    if (ipc_port_receive(p, &rep) != 0)
+	goto err;
+
+    ipc_port_delete(p);
+
+    // check result code
+    if (rep.data[0] != 0)
+	return -1;
+
+    // fill device information structure
+    info->port = rep.data[1];
+
+    return 0;
+
+err:
+    ipc_port_delete(p);
+    return -1;
+}

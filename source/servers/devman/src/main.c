@@ -25,21 +25,127 @@
 #include <libdevman/device.h>
 
 // =====================================================================================================================
+struct waiter
+{
+    // the reply port
+    int port;
+    struct waiter* next;
+};
+
+// =====================================================================================================================
 struct device
 {
-    enum device_type type;
+    // the main port of the device
     int port;
     struct device* next;
 };
 
-static struct device* s_devices = NULL;
+// =====================================================================================================================
+struct list
+{
+    // list of devices
+    struct device* next;
+    // list of applications waiting for this type of device
+    struct waiter* waiters;
+};
+
+static struct list s_devices[DEV_TYPE_COUNT];
+
 static struct slab_cache s_device_cache;
+static struct slab_cache s_waiter_cache;
+
+// =====================================================================================================================
+static void announce(struct ipc_message* m)
+{
+    dbprintf("devman: new device announced!\n");
+
+    struct device* dev = (struct device*)slab_cache_alloc(&s_device_cache);
+
+    if (!dev)
+	return;
+
+    dev->port = m->data[2];
+
+    enum device_type type = m->data[1];
+
+    // add the new device to the global list
+    dev->next = s_devices[type].next;
+    s_devices[type].next = dev;
+
+    // notify waiters
+    struct ipc_message msg;
+    msg.data[0] = 0;
+    msg.data[1] = dev->port;
+
+    struct waiter* w = s_devices[type].waiters;
+
+    while (w)
+    {
+	ipc_port_send(w->port, &msg);
+
+	struct waiter* tmp = w;
+	w = w->next;
+
+	slab_cache_free(&s_waiter_cache, (void*)tmp);
+    }
+
+    s_devices[type].waiters = NULL;
+}
+
+// =====================================================================================================================
+static void lookup(struct ipc_message* m)
+{
+    struct ipc_message reply;
+    enum device_type type = m->data[1];
+
+    // lookup the device
+    struct device* dev = s_devices[type].next;
+
+    if (!dev)
+    {
+	if (m->data[2])
+	{
+	    // wait for a device
+	    struct waiter* w = (struct waiter*)slab_cache_alloc(&s_waiter_cache);
+
+	    if (!w)
+		goto send_error;
+
+	    w->port = m->data[3];
+
+	    w->next = s_devices[type].waiters;
+	    s_devices[type].waiters = w;
+
+	    return;
+	}
+	else
+	    goto send_error;
+    }
+
+    reply.data[0] = 0;
+    reply.data[1] = dev->port;
+
+send_reply:
+    ipc_port_send(m->data[3], &reply);
+
+send_error:
+    reply.data[0] = -1;
+    goto send_reply;
+}
 
 // =====================================================================================================================
 int main(int argc, char** argv)
 {
-    // initialize device allocator
+    // initialize memory allocators
     slab_cache_init(&s_device_cache, sizeof(struct device));
+    slab_cache_init(&s_waiter_cache, sizeof(struct waiter));
+
+    // make each device list empty
+    for (unsigned i = 0; i < DEV_TYPE_COUNT; ++i)
+    {
+	s_devices[i].next = NULL;
+	s_devices[i].waiters = NULL;
+    }
 
     int p = ipc_port_create();
 
@@ -65,23 +171,12 @@ int main(int argc, char** argv)
 	switch (msg.data[0])
 	{
 	    case MSG_ANNOUNCE_DEVICE :
-	    {
-		dbprintf("devman: new device announced!\n");
-
-		struct device* dev = (struct device*)slab_cache_alloc(&s_device_cache);
-
-		if (dev)
-		{
-		    dev->type = msg.data[1];
-		    dev->port = msg.data[2];
-
-		    // add the new device to the global list
-		    dev->next = s_devices;
-		    s_devices = dev;
-		}
-
+		announce(&msg);
 		break;
-	    }
+
+	    case MSG_LOOKUP_DEVICE :
+		lookup(&msg);
+		break;
 	}
     }
 

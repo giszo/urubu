@@ -28,6 +28,18 @@ int ipc_port_create()
 }
 
 // =====================================================================================================================
+void ipc_port_delete(int port)
+{
+    syscall1(SYS_ipc_port_delete, port);
+}
+
+// =====================================================================================================================
+int ipc_port_send(int port, struct ipc_message* msg)
+{
+    return syscall2(SYS_ipc_port_send, port, (unsigned long)msg);
+}
+
+// =====================================================================================================================
 int ipc_port_receive(int port, struct ipc_message* msg)
 {
     int r = syscall2(SYS_ipc_port_receive, port, (unsigned long)msg);

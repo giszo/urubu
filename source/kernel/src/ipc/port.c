@@ -49,6 +49,22 @@ static struct ipc_port* ipc_port_create()
 }
 
 // =====================================================================================================================
+static void ipc_port_destroy(struct ipc_port* p)
+{
+    // delete queued messages on the port
+    struct ipc_message* m = p->msg_first;
+
+    while (m)
+    {
+	ipc_message_destroy(m);
+	m = m->next;
+    }
+
+    // delete the port itself, bye-bye :(
+    slab_cache_free(&s_port_cache, (void*)p);
+}
+
+// =====================================================================================================================
 static int ipc_port_insert(struct ipc_port* p)
 {
     spinlock_disable(&s_port_lock);
@@ -126,6 +142,33 @@ long sys_ipc_port_create()
     ipc_port_insert(p);
 
     return p->id;
+}
+
+// =====================================================================================================================
+long sys_ipc_port_delete(int port)
+{
+    struct ipc_port* p;
+
+    spinlock_disable(&s_port_lock);
+    p = (struct ipc_port*)hashtable_remove(&s_port_table, &port);
+    spinunlock_enable(&s_port_lock);
+
+    if (!p)
+	return -1;
+
+    // make sure no one is waiting on this port ...
+    if (!threadqueue_is_empty(&p->waiters))
+	kprintf("ipc: deleting port with threads still waiting on it!\n");
+
+    ipc_port_destroy(p);
+
+    return 0;
+}
+
+// =====================================================================================================================
+long sys_ipc_port_send(int port, void* data)
+{
+    return ipc_port_send(port, data);
 }
 
 // =====================================================================================================================

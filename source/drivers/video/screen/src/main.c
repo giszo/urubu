@@ -1,4 +1,4 @@
-/* Terminal driver.
+/* Text screen driver.
  *
  * Copyright (c) 2013 Zoltan Kovacs
  *
@@ -17,9 +17,35 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef TERMIANL_PC_SCREEN_H_INCLUDED
-#define TERMIANL_PC_SCREEN_H_INCLUDED
+#include <libdevman/device.h>
 
-int pc_screen_install();
+#include <urubu/ipc.h>
+#include <urubu/debug.h>
 
-#endif
+// =====================================================================================================================
+int main(int argc, char** argv)
+{
+    int p = ipc_port_create();
+
+    if (p < 0)
+    {
+	dbprintf("screen: unable to create IPC port\n");
+	return -1;
+    }
+
+    // announce the new driver
+    device_announce(SCREEN, p);
+
+    while (1)
+    {
+	struct ipc_message msg;
+
+	if (ipc_port_receive(p, &msg) != 0)
+	{
+	    dbprintf("screen: unable to receive IPC message\n");
+	    break;
+	}
+    }
+
+    return 0;
+}

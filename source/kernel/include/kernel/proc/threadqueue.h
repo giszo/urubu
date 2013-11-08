@@ -30,6 +30,7 @@ struct threadqueue
 
 void threadqueue_add(struct threadqueue* queue, struct thread* t);
 struct thread* threadqueue_pop(struct threadqueue* queue);
+int threadqueue_is_empty(struct threadqueue* queue);
 
 void threadqueue_init(struct threadqueue* queue);
 

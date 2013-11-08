@@ -4,10 +4,13 @@
 /source/kernel/kernel
 /source/lib/c/src/arch/amd64/syscall_table.h
 /source/drivers/input/ps2/ps2
+/source/driver/video/screen/screen
 /source/servers/devman/devman
 /source/servers/terminal/terminal
 
 /source/lib/c/libc.a
+/source/lib/slab/libslab.a
+/source/lib/devman/libdevman.a
 
 /urubu-amd64.iso
 

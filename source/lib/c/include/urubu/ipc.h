@@ -30,7 +30,9 @@ extern "C"
 // possible IPC message identifiers
 enum
 {
-    MSG_ANNOUNCE_DEVICE = 1000
+    // device operations
+    MSG_ANNOUNCE_DEVICE = 1000,
+    MSG_LOOKUP_DEVICE
 };
 
 // possible bits of IPC broadcast mask
@@ -45,6 +47,9 @@ struct ipc_message
 } __attribute__((packed));
 
 int ipc_port_create();
+void ipc_port_delete(int port);
+
+int ipc_port_send(int port, struct ipc_message* msg);
 int ipc_port_receive(int port, struct ipc_message* msg);
 int ipc_port_send_broadcast(unsigned broadcast, struct ipc_message* msg);
 

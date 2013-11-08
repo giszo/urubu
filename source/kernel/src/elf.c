@@ -39,7 +39,7 @@ static inline int elf_alloc_region(struct process* p, struct region_info* r, int
 {
     ptr_t base = r->base & PAGE_MASK;
     size_t off = r->base & ~PAGE_MASK;
-    size_t size = r->end - r->base + 1 /* TODO: + (PAGE_SIZE - off)*/;
+    size_t size = r->end - r->base + 1 + off;
     unsigned flags = VMM_READ | (writable ? VMM_WRITE : 0) | VMM_USER | VMM_FIXED;
 
     return vmm_alloc(p, &base, PAGE_ALIGN(size), flags);

@@ -45,6 +45,8 @@ struct ipc_port
 int ipc_port_send(int port, void* data);
 
 long sys_ipc_port_create();
+long sys_ipc_port_delete(int port);
+long sys_ipc_port_send(int port, void* data);
 long sys_ipc_port_receive(int port, void* data);
 long sys_ipc_port_send_broadcast(unsigned broadcast, void* data);
 

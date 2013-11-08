@@ -48,6 +48,12 @@ struct thread* threadqueue_pop(struct threadqueue* queue)
 }
 
 // =====================================================================================================================
+int threadqueue_is_empty(struct threadqueue* queue)
+{
+    return queue->first == NULL;
+}
+
+// =====================================================================================================================
 void threadqueue_init(struct threadqueue* queue)
 {
     queue->first = NULL;

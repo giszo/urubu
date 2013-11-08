@@ -44,6 +44,8 @@ static struct syscall_entry s_syscall_table[] =
 {
     // IPC
     {"ipc_port_create", sys_ipc_port_create},
+    {"ipc_port_delete", sys_ipc_port_delete},
+    {"ipc_port_send", sys_ipc_port_send},
     {"ipc_port_receive", sys_ipc_port_receive},
     {"ipc_port_send_broadcast", sys_ipc_port_send_broadcast},
     {"ipc_port_set_broadcast_mask", sys_ipc_port_set_broadcast_mask},

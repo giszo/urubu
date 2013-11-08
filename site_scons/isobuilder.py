@@ -24,10 +24,10 @@ def _write_grub_config(d, drivers, servers) :
     f = open(os.path.join(d, "menu.lst"), "w")
     f.write("title urubu\n")
     f.write("kernel /system/kernel\n")
-    for driver in drivers :
-        f.write("module /system/drivers/%s\n" % driver[driver.rfind('/')+1:])
     for server in servers :
         f.write("module /system/servers/%s\n" % server[server.rfind('/')+1:])
+    for driver in drivers :
+        f.write("module /system/drivers/%s\n" % driver[driver.rfind('/')+1:])
     f.close()
 
 def _iso_builder(target, source, env) :

@@ -18,21 +18,32 @@
 
 Import("env")
 
-sources = [
+client_sources = [
+    "device.c"
+]
+
+server_sources = [
     "device.c"
 ]
 
 # add the include directory of the library to the global environment
 env["CPPPATH"] += [Dir("include")]
 
-# Build the C library
-libdevman = env.StaticLibrary(target = "devman", source = ["src/%s" % x for x in sources])
+# Build the devman libraries
+libdevman_client = env.StaticLibrary(target = "devman_client", source = ["src/client/%s" % x for x in client_sources])
+libdevman_server = env.StaticLibrary(target = "devman_server", source = ["src/server/%s" % x for x in server_sources])
 
 # Install to the library path of GCC
-libdevman_install = Command(
-    "#toolchain/%s/lib/gcc/%s-pc-urubu/%s/libdevman.a" % (env["ARCH"], "x86_64", "4.7.3"),
-    str(libdevman[0]),
+libdevman_client_install = Command(
+    "#toolchain/%s/lib/gcc/%s-pc-urubu/%s/libdevman_client.a" % (env["ARCH"], "x86_64", "4.7.3"),
+    str(libdevman_client[0]),
     Action("cp $SOURCE $TARGET", env["CPCOMSTR"]))
-Depends(libdevman_install, libdevman)
+Depends(libdevman_client_install, libdevman_client)
 
-env["LIBRARIES"].append(libdevman_install)
+libdevman_server_install = Command(
+    "#toolchain/%s/lib/gcc/%s-pc-urubu/%s/libdevman_server.a" % (env["ARCH"], "x86_64", "4.7.3"),
+    str(libdevman_server[0]),
+    Action("cp $SOURCE $TARGET", env["CPCOMSTR"]))
+Depends(libdevman_server_install, libdevman_server)
+
+env["LIBRARIES"] += [libdevman_client_install, libdevman_server_install]

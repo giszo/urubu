@@ -19,11 +19,13 @@
 
 #include <stdio.h>
 
-#include <libdevman/device.h>
+#include <libdevman/client/device.h>
 
 #include <urubu/mm.h>
 #include <urubu/debug.h>
 #include <urubu/thread.h>
+
+static struct device s_screen;
 
 // =====================================================================================================================
 void screen_printf(const char* fmt, ...)
@@ -32,11 +34,10 @@ void screen_printf(const char* fmt, ...)
     char buf[512];
 
     va_start(args, fmt);
-    vsnprintf(buf, sizeof(buf), fmt, args);
+    int r = vsnprintf(buf, sizeof(buf), fmt, args);
     va_end(args);
 
-    //for (unsigned i = 0; buf[i]; ++i)
-    //s_screen->putc(buf[i]);
+    device_write(&s_screen, buf, r);
 }
 
 // =====================================================================================================================
@@ -51,7 +52,12 @@ int main(int argc, char** argv)
 	return -1;
     }
 
-    dbprintf("terminal: found screen at port %d\n", info.port);
+    // open the screen device
+    if (device_open(&s_screen, &info) != 0)
+    {
+	dbprintf("terminal: unable to open the screen device!\n");
+	return -1;
+    }
 
     // display some kind of system statistics for now on the screen ...
     struct mm_phys_stat ps;

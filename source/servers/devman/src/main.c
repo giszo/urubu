@@ -22,7 +22,7 @@
 
 #include <libslab/cache.h>
 
-#include <libdevman/device.h>
+#include <libdevman/type.h>
 
 // =====================================================================================================================
 struct waiter
@@ -57,8 +57,6 @@ static struct slab_cache s_waiter_cache;
 // =====================================================================================================================
 static void announce(struct ipc_message* m)
 {
-    dbprintf("devman: new device announced!\n");
-
     struct device* dev = (struct device*)slab_cache_alloc(&s_device_cache);
 
     if (!dev)
@@ -170,11 +168,11 @@ int main(int argc, char** argv)
 
 	switch (msg.data[0])
 	{
-	    case MSG_ANNOUNCE_DEVICE :
+	    case MSG_DEVICE_ANNOUNCE :
 		announce(&msg);
 		break;
 
-	    case MSG_LOOKUP_DEVICE :
+	    case MSG_DEVICE_LOOKUP :
 		lookup(&msg);
 		break;
 	}

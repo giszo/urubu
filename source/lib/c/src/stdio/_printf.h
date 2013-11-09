@@ -28,8 +28,8 @@ typedef struct snprintf_data snprintf_data_t;
 struct snprintf_data
 {
     char* buf;
-    size_t size;
-    size_t max_size;
+    int size;
+    int max_size;
 };
 
 int _snprintf_out_helper(void* _data, char c);

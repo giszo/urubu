@@ -1,6 +1,6 @@
 /* Urubu C library.
  *
- * Copyright (c) 2012 Zoltan Kovacs
+ * Copyright (c) 2013 Zoltan Kovacs
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,26 +17,16 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#include <stdio.h>
-#include <stdarg.h>
-
-#include "_printf.h"
+#include <string.h>
 
 // =====================================================================================================================
-int vsnprintf(char *str, size_t size, const char* format, va_list args)
+void* memcpy(void* d, const void* s, size_t n)
 {
-    struct snprintf_data data;
-    data.buf = str;
-    data.size = 0;
-    data.max_size = size;
+    char* dest = (char*)d;
+    char* src = (char*)s;
 
-    _printf_helper(_snprintf_out_helper, &data, format, args);
+    while (n--)
+	*dest++ = *src++;
 
-    // make space for the '\0' character at the end of the buffer if it is full
-    if (data.size == data.max_size)
-	data.size--;
-
-    data.buf[data.size] = 0;
-
-    return data.size;
+    return d;
 }

@@ -23,10 +23,7 @@
 #include <kernel/proc/sched.h>
 #include <kernel/ipc/port.h>
 #include <kernel/ipc/message.h>
-
-#include <kernel/console.h>
-void t1() { while (1) kprintf("1"); }
-void t2() { while (1) kprintf("2"); }
+#include <kernel/ipc/shmem.h>
 
 // =====================================================================================================================
 void kernel_start()
@@ -38,11 +35,5 @@ void kernel_start()
     sched_init();
     ipc_port_init();
     ipc_message_init();
-
-#if 0
-    thread* t = thread_create_kernel("t1", (void*)t1, NULL);
-    sched_add_ready(t);
-    t = thread_create_kernel("t2", (void*)t2, NULL);
-    sched_add_ready(t);
-#endif
+    ipc_shmem_init();
 }

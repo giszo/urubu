@@ -24,6 +24,7 @@
 #include <kernel/mm/map.h>
 #include <kernel/mm/slab.h>
 #include <kernel/sync/mutex.h>
+#include <kernel/ipc/shmem.h>
 
 struct process;
 
@@ -63,6 +64,8 @@ ptr_t vmm_revert_phys(ptr_t virt);
 
 int vmm_map(struct process* proc, ptr_t* base, ptr_t phys, size_t size, unsigned flags);
 int vmm_alloc(struct process* proc, ptr_t* base, size_t size, unsigned flags);
+
+int vmm_map_shmem(struct process* proc, ptr_t* base, struct shmem_block* blocks, size_t size, unsigned flags);
 
 int vmm_copy_to(struct process* proc, ptr_t virt, void* p, size_t size);
 int vmm_clear(struct process* proc, ptr_t virt, size_t size);

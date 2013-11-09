@@ -51,6 +51,7 @@ sources = [
     "sync/mutex.c",
     "ipc/port.c",
     "ipc/message.c",
+    "ipc/shmem.c",
     "mm/map.c",
     "mm/pmm.c",
     "mm/vmm.c",

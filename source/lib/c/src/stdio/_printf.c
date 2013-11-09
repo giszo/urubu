@@ -37,9 +37,13 @@ enum printf_flags
 // =====================================================================================================================
 int _snprintf_out_helper(void* _data, char c)
 {
-    // TODO: handle max_size
     snprintf_data_t* data = (snprintf_data_t*)_data;
+
+    if (data->size == data->max_size)
+	return 0;
+
     data->buf[data->size++] = c;
+
     return 0;
 }
 

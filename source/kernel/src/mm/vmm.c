@@ -158,6 +158,50 @@ err1:
 }
 
 // =====================================================================================================================
+int vmm_map_shmem(struct process* proc, ptr_t* base, struct shmem_block* blocks, size_t size, unsigned flags)
+{
+    if (size & ~PAGE_MASK)
+	return -1;
+
+    struct vmm_context* ctx = &proc->vmm_ctx;
+
+    mutex_lock(&ctx->lock);
+
+    // allocate a new region for the shared memory
+    *base = memory_map_alloc(&proc->vmm_ctx.free_map, size);
+
+    if (*base == 0)
+	goto err1;
+
+    // map the pages
+    size_t p = *base;
+    struct shmem_block* block = blocks;
+
+    while (block)
+    {
+	for (unsigned i = 0; i < block->used; ++i)
+	{
+	    if (vmm_arch_proc_map(proc, p, block->pages[i], flags) != 0)
+		goto err2;
+
+	    p += PAGE_SIZE;
+	}
+
+	block = block->next;
+    }
+
+    mutex_unlock(&ctx->lock);
+
+    return 0;
+
+err2:
+    // TODO: cleanup
+err1:
+    mutex_unlock(&ctx->lock);
+    return -1;
+}
+
+// =====================================================================================================================
 int vmm_copy_to(struct process* proc, ptr_t virt, void* p, size_t size)
 {
     uint8_t* data = (uint8_t*)p;

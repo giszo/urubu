@@ -58,3 +58,25 @@ int ipc_port_set_broadcast_mask(int port, unsigned mask)
 {
     return syscall2(SYS_ipc_port_set_broadcast_mask, port, mask);
 }
+
+// =====================================================================================================================
+int ipc_shmem_create(size_t size, void** base)
+{
+    int result = syscall2(SYS_ipc_shmem_create, size, (unsigned long)base);
+    memory_barrier();
+    return result;
+}
+
+// =====================================================================================================================
+int ipc_shmem_accept(int id, void** base, size_t* size)
+{
+    int result = syscall3(SYS_ipc_shmem_accept, id, (unsigned long)base, (unsigned long)size);
+    memory_barrier();
+    return result;
+}
+
+// =====================================================================================================================
+void ipc_shmem_close(int id)
+{
+    syscall1(SYS_ipc_shmem_close, id);
+}

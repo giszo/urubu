@@ -21,13 +21,32 @@
 #include <kernel/console.h>
 #include <kernel/types.h>
 #include <kernel/cpu/cpu.h>
+#include <kernel/proc/process.h>
 
 #include <arch/cpu/cpu.h>
 
 #define UNHANDLED_EXCEPTION \
     cpu_arch_disable_int(); \
+    dump_process(); \
     kprintf_unlocked("CS:EIP=%x:%p\n", ctx->cs, ctx->ip); \
     panic("%s: unhandled exception!\n", __FUNCTION__)
+
+// =====================================================================================================================
+static void dump_process()
+{
+    struct thread* t = thread_current();
+
+    if (!t)
+    {
+	kprintf_unlocked("Thread: <unknown>\n");
+	return;
+    }
+
+    if (t->proc)
+	kprintf_unlocked("Process: %s\n", t->proc->name);
+
+    kprintf_unlocked("Thread: %s\n", t->name);
+}
 
 // =====================================================================================================================
 void isr_division_by_zero(struct irq_context* ctx)

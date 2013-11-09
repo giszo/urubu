@@ -20,6 +20,7 @@
 #include <kernel/console.h>
 #include <kernel/cpu/irq.h>
 #include <kernel/ipc/port.h>
+#include <kernel/ipc/shmem.h>
 #include <kernel/mm/vmm.h>
 #include <kernel/mm/pmm.h>
 #include <kernel/proc/thread.h>
@@ -49,6 +50,9 @@ static struct syscall_entry s_syscall_table[] =
     {"ipc_port_receive", sys_ipc_port_receive},
     {"ipc_port_send_broadcast", sys_ipc_port_send_broadcast},
     {"ipc_port_set_broadcast_mask", sys_ipc_port_set_broadcast_mask},
+    {"ipc_shmem_create", sys_ipc_shmem_create},
+    {"ipc_shmem_accept", sys_ipc_shmem_accept},
+    {"ipc_shmem_close", sys_ipc_shmem_close},
 
     // IRQ
     {"irq_register", sys_irq_register},

@@ -21,6 +21,10 @@
 #define _URUBU_IPC_H_
 
 #include <stdint.h>
+#include <stddef.h>
+
+// TODO: remove this when PAGE_SIZE is removed from mm.h
+#include <urubu/mm.h>
 
 #ifdef __cplusplus
 extern "C"
@@ -31,8 +35,12 @@ extern "C"
 enum
 {
     // device operations
-    MSG_ANNOUNCE_DEVICE = 1000,
-    MSG_LOOKUP_DEVICE
+    MSG_DEVICE_ANNOUNCE = 1000,
+    MSG_DEVICE_LOOKUP,
+    MSG_DEVICE_OPEN,
+    MSG_DEVICE_CLOSE,
+    MSG_DEVICE_READ,
+    MSG_DEVICE_WRITE
 };
 
 // possible bits of IPC broadcast mask
@@ -54,6 +62,10 @@ int ipc_port_receive(int port, struct ipc_message* msg);
 int ipc_port_send_broadcast(unsigned broadcast, struct ipc_message* msg);
 
 int ipc_port_set_broadcast_mask(int port, unsigned mask);
+
+int ipc_shmem_create(size_t size, void** base);
+int ipc_shmem_accept(int id, void** base, size_t* size);
+void ipc_shmem_close(int id);
 
 #ifdef __cplusplus
 }

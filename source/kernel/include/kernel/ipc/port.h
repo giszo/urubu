@@ -31,9 +31,6 @@ struct ipc_port
     // ID of the port
     int id;
 
-    // mask broadcast informations this port is interested in
-    unsigned broadcast_mask;
-
     // list of messages waiting on this port
     struct ipc_message* msg_first;
     struct ipc_message* msg_last;
@@ -48,9 +45,6 @@ long sys_ipc_port_create();
 long sys_ipc_port_delete(int port);
 long sys_ipc_port_send(int port, void* data);
 long sys_ipc_port_receive(int port, void* data);
-long sys_ipc_port_send_broadcast(unsigned broadcast, void* data);
-
-long sys_ipc_port_set_broadcast_mask(int port, unsigned mask);
 
 void ipc_port_init();
 

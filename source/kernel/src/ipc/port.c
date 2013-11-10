@@ -40,7 +40,6 @@ static struct ipc_port* ipc_port_create()
 	return NULL;
 
     p->id = -1;
-    p->broadcast_mask = 0;
     p->msg_first = NULL;
     p->msg_last = NULL;
     threadqueue_init(&p->waiters);
@@ -212,73 +211,6 @@ long sys_ipc_port_receive(int port, void* data)
 
     // destroy the message
     ipc_message_destroy(msg);
-
-    return 0;
-}
-
-// =====================================================================================================================
-struct broadcast_msg
-{
-    unsigned mask;
-    void* data;
-};
-
-// =====================================================================================================================
-static void broadcast_sender(struct hashitem* item, void* data)
-{
-    struct ipc_port* p = (struct ipc_port*)item;
-    struct broadcast_msg* d = (struct broadcast_msg*)data;
-
-    // check whether this port is interested in the broadcast message
-    if ((p->broadcast_mask & d->mask) == 0)
-	return;
-
-    // create a new message for this port
-    struct ipc_message* msg = ipc_message_create();
-
-    if (!msg)
-	return;
-
-    memcpy(&msg->data, d->data, sizeof(struct ipc_user_msg));
-
-    // send the message ...
-    do_send(p, msg);
-}
-
-// =====================================================================================================================
-long sys_ipc_port_send_broadcast(unsigned broadcast, void* data)
-{
-    struct broadcast_msg d;
-    d.mask = broadcast;
-    d.data = data;
-
-    spinlock_disable(&s_port_lock);
-    hashtable_iterate(&s_port_table, broadcast_sender, &d);
-    spinunlock_enable(&s_port_lock);
-
-    return 0;
-}
-
-// =====================================================================================================================
-long sys_ipc_port_set_broadcast_mask(int port, unsigned mask)
-{
-    struct ipc_port* p;
-
-    spinlock_disable(&s_port_lock);
-
-    // lookup the target port
-    p = (struct ipc_port*)hashtable_get(&s_port_table, &port);
-
-    if (!p)
-    {
-	spinunlock_enable(&s_port_lock);
-	return -1;
-    }
-
-    // update the mask
-    p->broadcast_mask = mask;
-
-    spinunlock_enable(&s_port_lock);
 
     return 0;
 }

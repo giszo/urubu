@@ -43,6 +43,8 @@ void screen_printf(const char* fmt, ...)
 // =====================================================================================================================
 int main(int argc, char** argv)
 {
+    libdevman_init();
+
     // wait for a screen type device to get registered
     struct device_info info;
 

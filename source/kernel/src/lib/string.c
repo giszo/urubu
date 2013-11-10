@@ -109,3 +109,19 @@ char* strncpy(char* d, const char* s, size_t n)
 
     return d;
 }
+
+// =====================================================================================================================
+int strcmp(const char* s1, const char* s2)
+{
+    int r;
+
+    while (1)
+    {
+        r = *s1 - *s2++;
+
+        if ((r != 0) || (*s1++ == 0))
+            break;
+    }
+
+    return r;
+}

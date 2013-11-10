@@ -52,6 +52,7 @@ sources = [
     "ipc/port.c",
     "ipc/message.c",
     "ipc/shmem.c",
+    "ipc/server.c",
     "mm/map.c",
     "mm/pmm.c",
     "mm/vmm.c",

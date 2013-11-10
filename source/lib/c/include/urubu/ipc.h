@@ -43,12 +43,6 @@ enum
     MSG_DEVICE_WRITE
 };
 
-// possible bits of IPC broadcast mask
-enum
-{
-    IPC_BROADCAST_DEVICE = 1
-};
-
 struct ipc_message
 {
     uint64_t data[6];
@@ -59,13 +53,13 @@ void ipc_port_delete(int port);
 
 int ipc_port_send(int port, struct ipc_message* msg);
 int ipc_port_receive(int port, struct ipc_message* msg);
-int ipc_port_send_broadcast(unsigned broadcast, struct ipc_message* msg);
-
-int ipc_port_set_broadcast_mask(int port, unsigned mask);
 
 int ipc_shmem_create(size_t size, void** base);
 int ipc_shmem_accept(int id, void** base, size_t* size);
 void ipc_shmem_close(int id);
+
+int ipc_server_register(const char* name, int port);
+int ipc_server_lookup(const char* name, int wait);
 
 #ifdef __cplusplus
 }

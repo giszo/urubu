@@ -23,6 +23,8 @@
 
 #include <string.h>
 
+static int s_devman_port = -1;
+
 // =====================================================================================================================
 int device_lookup(enum device_type type, int wait, struct device_info* info)
 {
@@ -41,7 +43,7 @@ int device_lookup(enum device_type type, int wait, struct device_info* info)
     req.data[2] = wait;
     req.data[3] = p;
 
-    if (ipc_port_send_broadcast(IPC_BROADCAST_DEVICE, &req) != 0)
+    if (ipc_port_send(s_devman_port, &req) != 0)
 	goto err;
 
     if (ipc_port_receive(p, &rep) != 0)
@@ -147,5 +149,12 @@ int device_write(struct device* dev, const void* data, size_t size)
 	    return  -1;
     }
 
+    return 0;
+}
+
+// =====================================================================================================================
+int libdevman_init()
+{
+    s_devman_port = ipc_server_lookup("devman", 1);
     return 0;
 }

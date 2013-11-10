@@ -98,16 +98,10 @@ static void thread_destroy(struct thread* t)
 }
 
 // =====================================================================================================================
-static void* thread_item_key(struct hashitem* item)
+static const void* thread_item_key(struct hashitem* item)
 {
     struct thread* t = (struct thread*)item;
     return &t->id;
-}
-
-// =====================================================================================================================
-static int thread_item_compare(const void* k1, const void* k2)
-{
-    return *(int*)k1 == *(int*)k2;
 }
 
 // =====================================================================================================================
@@ -257,7 +251,7 @@ static void thread_cleaner()
 void thread_init()
 {
     thread_arch_init();
-    hashtable_init(&s_thread_table, thread_item_key, hashtable_hash_unsigned, thread_item_compare);
+    hashtable_init(&s_thread_table, thread_item_key, hashtable_hash_int, hashtable_compare_int);
     slab_cache_init(&s_thread_cache, sizeof(struct thread));
 
     // initialize thread cleanup queue and thread

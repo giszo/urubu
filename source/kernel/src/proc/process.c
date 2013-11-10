@@ -60,23 +60,17 @@ err1:
 }
 
 // =====================================================================================================================
-static void* process_item_key(struct hashitem* item)
+static const void* process_item_key(struct hashitem* item)
 {
     struct process* p = (struct process*)item;
     return &p->id;
 }
 
 // =====================================================================================================================
-static int process_item_compare(const void* k1, const void* k2)
-{
-    return *(int*)k1 == *(int*)k2;
-}
-
-// =====================================================================================================================
 void process_init()
 {
     process_arch_init();
-    hashtable_init(&s_process_table, process_item_key, hashtable_hash_unsigned, process_item_compare);
+    hashtable_init(&s_process_table, process_item_key, hashtable_hash_int, hashtable_compare_int);
     slab_cache_init(&s_process_cache, sizeof(struct process));
 
     // reserve the first process for the kernel

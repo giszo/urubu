@@ -153,8 +153,8 @@ int main(int argc, char** argv)
 	return -1;
     }
 
-    // we are interested in device broadcast messages
-    ipc_port_set_broadcast_mask(p, IPC_BROADCAST_DEVICE);
+    // register the device manager server
+    ipc_server_register("devman", p);
 
     while (1)
     {

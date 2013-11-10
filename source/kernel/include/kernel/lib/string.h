@@ -31,5 +31,6 @@ void memsetl(void* s, int c, size_t n);
 size_t strlen(const char* s);
 char* strrchr(const char* s, int c);
 char* strncpy(char* d, const char* s, size_t n);
+int strcmp(const char* s1, const char* s2);
 
 #endif

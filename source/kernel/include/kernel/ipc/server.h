@@ -1,4 +1,4 @@
-/* Entry point of the kernel.
+/* Support for userspace servers.
  *
  * Copyright (c) 2013 Zoltan Kovacs
  *
@@ -17,25 +17,31 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#include <kernel/cpu/irq.h>
-#include <kernel/proc/process.h>
-#include <kernel/proc/thread.h>
-#include <kernel/proc/sched.h>
-#include <kernel/ipc/port.h>
-#include <kernel/ipc/message.h>
-#include <kernel/ipc/shmem.h>
-#include <kernel/ipc/server.h>
+#ifndef _KERNEL_IPC_SERVER_H_
+#define _KERNEL_IPC_SERVER_H_
 
-// =====================================================================================================================
-void kernel_start()
+#include <kernel/lib/hashtable.h>
+
+#define SERVER_NAME_SIZE 32
+
+struct ipc_server
 {
-    vmm_init();
-    irq_init();
-    process_init();
-    thread_init();
-    sched_init();
-    ipc_port_init();
-    ipc_message_init();
-    ipc_shmem_init();
-    ipc_server_init();
-}
+    struct hashitem _item;
+
+    char name[SERVER_NAME_SIZE];
+    int port;
+};
+
+struct ipc_server_waiter
+{
+    char name[SERVER_NAME_SIZE];
+    struct thread* waiter;
+    struct ipc_server_waiter* next;
+};
+
+long sys_ipc_server_register(const char* name, int port);
+long sys_ipc_server_lookup(const char* name, int wait);
+
+void ipc_server_init();
+
+#endif

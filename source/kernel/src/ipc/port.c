@@ -284,21 +284,15 @@ long sys_ipc_port_set_broadcast_mask(int port, unsigned mask)
 }
 
 // =====================================================================================================================
-static void* ipc_port_item_key(struct hashitem* item)
+static const void* ipc_port_item_key(struct hashitem* item)
 {
     struct ipc_port* p = (struct ipc_port*)item;
     return &p->id;
 }
 
 // =====================================================================================================================
-static int ipc_port_item_compare(const void* k1, const void* k2)
-{
-    return *(int*)k1 == *(int*)k2;
-}
-
-// =====================================================================================================================
 void ipc_port_init()
 {
     slab_cache_init(&s_port_cache, sizeof(struct ipc_port));
-    hashtable_init(&s_port_table, ipc_port_item_key, hashtable_hash_unsigned, ipc_port_item_compare);
+    hashtable_init(&s_port_table, ipc_port_item_key, hashtable_hash_int, hashtable_compare_int);
 }

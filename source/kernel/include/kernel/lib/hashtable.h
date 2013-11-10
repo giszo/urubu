@@ -28,7 +28,7 @@ struct hashitem
     struct hashitem* next;
 };
 
-typedef void* key_func_t(struct hashitem* i);
+typedef const void* key_func_t(struct hashitem* i);
 typedef unsigned hash_func_t(const void*);
 typedef int compare_func_t(const void* k1, const void* k2);
 
@@ -47,7 +47,11 @@ struct hashtable
 
 typedef void hashtable_iterator(struct hashitem*, void*);
 
-unsigned hashtable_hash_unsigned(const void* k);
+unsigned hashtable_hash_int(const void* k);
+unsigned hashtable_hash_string(const void* k);
+
+int hashtable_compare_int(const void* k1, const void* k2);
+int hashtable_compare_string(const void* k1, const void* k2);
 
 void hashtable_add(struct hashtable* table, struct hashitem* item);
 struct hashitem* hashtable_get(struct hashtable* table, const void* key);

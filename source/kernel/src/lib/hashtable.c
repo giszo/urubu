@@ -24,12 +24,14 @@
 #include <arch/mm/config.h>
 
 // =====================================================================================================================
-static inline unsigned hash_number(uint8_t* d, size_t len) {
+unsigned hashtable_hash_int(const void* k)
+{
     unsigned hash = 0;
+    const char* n = (const char*)k;
 
-    for (size_t i = 0; i < len; ++i, ++d)
+    for (size_t i = 0; i < sizeof(int); ++i, ++n)
     {
-	hash += *d;
+	hash += *n;
 	hash += (hash << 10);
 	hash ^= (hash >> 6);
     }
@@ -39,18 +41,43 @@ static inline unsigned hash_number(uint8_t* d, size_t len) {
     hash += (hash << 15);
 
     return hash;
+
 }
 
 // =====================================================================================================================
-unsigned hashtable_hash_unsigned(const void* k)
+unsigned hashtable_hash_string(const void* k)
 {
-    return hash_number((uint8_t*)k, sizeof(unsigned));
+    unsigned hash = 2166136261U;
+    const char* s = (const char*)k;
+
+    while (*s)
+        hash = (hash ^ *s++) * 16777619;
+
+    hash += hash << 13;
+    hash ^= hash >> 7;
+    hash += hash << 3;
+    hash ^= hash >> 17;
+    hash += hash << 5;
+
+    return hash;
+}
+
+// =====================================================================================================================
+int hashtable_compare_int(const void* k1, const void* k2)
+{
+    return *(int*)k1 == *(int*)k2;
+}
+
+// =====================================================================================================================
+int hashtable_compare_string(const void* k1, const void* k2)
+{
+    return strcmp((const char*)k1, (const char*)k2) == 0;
 }
 
 // =====================================================================================================================
 void hashtable_add(struct hashtable* table, struct hashitem* item)
 {
-    void* key = table->key(item);
+    const void* key = table->key(item);
     uint32_t idx = table->hash(key) % table->size;
 
     item->next = table->table[idx];

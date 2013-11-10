@@ -48,18 +48,6 @@ int ipc_port_receive(int port, struct ipc_message* msg)
 }
 
 // =====================================================================================================================
-int ipc_port_send_broadcast(unsigned broadcast, struct ipc_message* msg)
-{
-    return syscall2(SYS_ipc_port_send_broadcast, broadcast, (unsigned long)msg);
-}
-
-// =====================================================================================================================
-int ipc_port_set_broadcast_mask(int port, unsigned mask)
-{
-    return syscall2(SYS_ipc_port_set_broadcast_mask, port, mask);
-}
-
-// =====================================================================================================================
 int ipc_shmem_create(size_t size, void** base)
 {
     int result = syscall2(SYS_ipc_shmem_create, size, (unsigned long)base);
@@ -79,4 +67,16 @@ int ipc_shmem_accept(int id, void** base, size_t* size)
 void ipc_shmem_close(int id)
 {
     syscall1(SYS_ipc_shmem_close, id);
+}
+
+// =====================================================================================================================
+int ipc_server_register(const char* name, int port)
+{
+    return syscall2(SYS_ipc_server_register, (unsigned long)name, port);
+}
+
+// =====================================================================================================================
+int ipc_server_lookup(const char* name, int wait)
+{
+    return syscall2(SYS_ipc_server_lookup, (unsigned long)name, wait);
 }

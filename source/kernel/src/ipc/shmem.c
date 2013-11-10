@@ -153,22 +153,16 @@ long sys_ipc_shmem_close(int id)
 }
 
 // =====================================================================================================================
-static void* ipc_shmem_item_key(struct hashitem* item)
+static const void* ipc_shmem_item_key(struct hashitem* item)
 {
     struct shmem* s = (struct shmem*)item;
     return &s->id;
 }
 
 // =====================================================================================================================
-static int ipc_shmem_item_compare(const void* k1, const void* k2)
-{
-    return *(int*)k1 == *(int*)k2;
-}
-
-// =====================================================================================================================
 void ipc_shmem_init()
 {
-    hashtable_init(&s_shmem_table, ipc_shmem_item_key, hashtable_hash_unsigned, ipc_shmem_item_compare);
+    hashtable_init(&s_shmem_table, ipc_shmem_item_key, hashtable_hash_int, hashtable_compare_int);
     slab_cache_init(&s_shmem_cache, sizeof(struct shmem));
     slab_cache_init(&s_shmem_block_cache, sizeof(struct shmem_block));
     mutex_init(&s_shmem_lock);

@@ -23,6 +23,8 @@
 
 #include <urubu/ipc.h>
 
+static int s_devman_port = -1;
+
 static struct slab_cache s_dev_conn_cache;
 
 // =====================================================================================================================
@@ -39,7 +41,7 @@ int device_announce(struct device* dev, enum device_type type, int port, struct 
     msg.data[1] = type;
     msg.data[2] = port;
 
-    return ipc_port_send_broadcast(IPC_BROADCAST_DEVICE, &msg);
+    return ipc_port_send(s_devman_port, &msg);
 }
 
 // =====================================================================================================================
@@ -123,6 +125,7 @@ int device_run(struct device* dev)
 // =====================================================================================================================
 int libdevman_init()
 {
+    s_devman_port = ipc_server_lookup("devman", 1);
     slab_cache_init(&s_dev_conn_cache, sizeof(struct device_conn));
     return 0;
 }

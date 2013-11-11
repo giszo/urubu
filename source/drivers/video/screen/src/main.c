@@ -146,7 +146,7 @@ int main(int argc, char** argv)
 
     screen_clear();
 
-    libdevman_init();
+    libdevman_server_init();
 
     int p = ipc_port_create();
 

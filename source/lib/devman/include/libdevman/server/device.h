@@ -63,6 +63,6 @@ int device_run(struct device* dev);
 /**
  * Initializes the device manager library.
  */
-int libdevman_init();
+int libdevman_server_init();
 
 #endif

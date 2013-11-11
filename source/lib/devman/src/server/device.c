@@ -123,7 +123,7 @@ int device_run(struct device* dev)
 }
 
 // =====================================================================================================================
-int libdevman_init()
+int libdevman_server_init()
 {
     s_devman_port = ipc_server_lookup("devman", 1);
     slab_cache_init(&s_dev_conn_cache, sizeof(struct device_conn));

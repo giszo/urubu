@@ -59,6 +59,6 @@ int device_open(struct device* dev, struct device_info* info);
  */
 int device_write(struct device* dev, const void* data, size_t size);
 
-int libdevman_init();
+int libdevman_client_init();
 
 #endif

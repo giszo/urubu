@@ -153,7 +153,7 @@ int device_write(struct device* dev, const void* data, size_t size)
 }
 
 // =====================================================================================================================
-int libdevman_init()
+int libdevman_client_init()
 {
     s_devman_port = ipc_server_lookup("devman", 1);
     return 0;

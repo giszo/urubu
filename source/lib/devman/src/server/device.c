@@ -17,7 +17,7 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#include <libdevman/server/device.h>
+#include "device.h"
 
 #include <libsupport/slab.h>
 
@@ -112,7 +112,7 @@ static void do_write(struct ipc_message* m)
 }
 
 // =====================================================================================================================
-int libdevman_server_run()
+int libdevman_server_run(msg_handler* handler)
 {
     while (1)
     {
@@ -135,6 +135,11 @@ int libdevman_server_run()
 
 	    case MSG_DEVICE_WRITE:
 		do_write(&msg);
+		break;
+
+	    default :
+		if (handler)
+		    handler(&msg);
 		break;
 	}
     }
@@ -165,4 +170,10 @@ int libdevman_server_init()
     slab_cache_init(&s_dev_conn_cache, sizeof(struct device_conn));
 
     return 0;
+}
+
+// =====================================================================================================================
+int libdevman_server_get_port()
+{
+    return s_local_port;
 }

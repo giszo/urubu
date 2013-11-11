@@ -152,7 +152,7 @@ int main(int argc, char** argv)
     device_announce(SCREEN, &s_ops);
 
     // run the main loop
-    libdevman_server_run();
+    libdevman_server_run(NULL);
 
     return 0;
 }

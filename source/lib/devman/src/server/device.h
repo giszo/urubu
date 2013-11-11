@@ -17,41 +17,31 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef _LIBDEVMAN_SERVER_DEVICE_H_
-#define _LIBDEVMAN_SERVER_DEVICE_H_
+#ifndef _DEVICE_H_
+#define _DEVICE_H_
 
-#include <libdevman/type.h>
+#include <libdevman/server/device.h>
 
-#include <stddef.h>
+#include <libsupport/hashtable.h>
 
-struct device_ops
+struct device
 {
-    int (*read)(void* data, size_t size);
-    int (*write)(const void* data, size_t size);
+    struct hashitem _item;
+
+    // the ID of the device
+    int id;
+
+    struct device_ops* ops;
 };
 
-struct ipc_message;
-
-typedef void msg_handler(struct ipc_message*);
-
-/**
- * Announces a new device with the given type on the specified port.
- */
-int device_announce(enum device_type type, struct device_ops* ops);
-
-/**
- * Returns the port ID allocated by the library.
- */
-int libdevman_server_get_port();
-
-/**
- * The main loop of a device.
- */
-int libdevman_server_run(msg_handler* handler);
-
-/**
- * Initializes the device manager library.
- */
-int libdevman_server_init();
+struct device_conn
+{
+    int id;
+    // the ID of the shared memory region used for data transfer
+    int shmem;
+    size_t size;
+    void* data;
+    struct device* dev;
+};
 
 #endif

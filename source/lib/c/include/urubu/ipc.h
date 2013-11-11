@@ -40,7 +40,10 @@ enum
     MSG_DEVICE_OPEN,
     MSG_DEVICE_CLOSE,
     MSG_DEVICE_READ,
-    MSG_DEVICE_WRITE
+    MSG_DEVICE_WRITE,
+
+    // terminal server messages
+    MSG_TERMINAL_CREATE
 };
 
 struct ipc_message

@@ -18,4 +18,4 @@
 
 Import("env")
 
-SConscript(dirs = ["crt0", "c", "slab", "devman"], exports = ["env"])
+SConscript(dirs = ["crt0", "c", "support", "devman"], exports = ["env"])

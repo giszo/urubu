@@ -57,6 +57,7 @@ int device_lookup(enum device_type type, int wait, struct device_info* info)
 
     // fill device information structure
     info->port = rep.data[1];
+    info->id = rep.data[2];
 
     return 0;
 
@@ -86,8 +87,9 @@ int device_open(struct device* dev, struct device_info* info)
     // send the request
     struct ipc_message msg;
     msg.data[0] = MSG_DEVICE_OPEN;
-    msg.data[1] = dev->shmem;
-    msg.data[2] = dev->reply;
+    msg.data[1] = info->id;
+    msg.data[2] = dev->shmem;
+    msg.data[3] = dev->reply;
 
     if (ipc_port_send(info->port, &msg) != 0)
 	goto err3;

@@ -20,7 +20,7 @@
 #include <urubu/ipc.h>
 #include <urubu/debug.h>
 
-#include <libslab/cache.h>
+#include <libsupport/slab.h>
 
 #include <libdevman/type.h>
 
@@ -35,6 +35,8 @@ struct waiter
 // =====================================================================================================================
 struct device
 {
+    // the ID of the device
+    int id;
     // the main port of the device
     int port;
     struct device* next;
@@ -62,6 +64,7 @@ static void announce(struct ipc_message* m)
     if (!dev)
 	return;
 
+    dev->id = m->data[3];
     dev->port = m->data[2];
 
     enum device_type type = m->data[1];
@@ -122,6 +125,7 @@ static void lookup(struct ipc_message* m)
 
     reply.data[0] = 0;
     reply.data[1] = dev->port;
+    reply.data[2] = dev->id;
 
 send_reply:
     ipc_port_send(m->data[3], &reply);

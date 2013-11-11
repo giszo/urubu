@@ -27,6 +27,7 @@
 struct device_info
 {
     int port;
+    int id;
 };
 
 struct device

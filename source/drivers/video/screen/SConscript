@@ -18,6 +18,6 @@
 
 Import("env")
 
-screen = env.Program(target = "screen", source = ["src/main.c"], LIBS = ["devman_server", "slab"])
+screen = env.Program(target = "screen", source = ["src/main.c"], LIBS = ["devman_server", "support"])
 
 env["DRIVERS"].append(screen)

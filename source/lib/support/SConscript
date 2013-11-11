@@ -18,19 +18,19 @@
 
 Import("env")
 
-sources = ["cache.c"]
+sources = ["slab.c", "hashtable.c"]
 
 # add the include directory of the library to the global environment
 env["CPPPATH"] += [Dir("include")]
 
 # Build the C library
-libslab = env.StaticLibrary(target = "slab", source = ["src/%s" % x for x in sources])
+libsupport = env.StaticLibrary(target = "support", source = ["src/%s" % x for x in sources])
 
 # Install to the library path of GCC
-libslab_install = Command(
-    "#toolchain/%s/lib/gcc/%s-pc-urubu/%s/libslab.a" % (env["ARCH"], "x86_64", "4.7.3"),
-    str(libslab[0]),
+libsupport_install = Command(
+    "#toolchain/%s/lib/gcc/%s-pc-urubu/%s/libsupport.a" % (env["ARCH"], "x86_64", "4.7.3"),
+    str(libsupport[0]),
     Action("cp $SOURCE $TARGET", env["CPCOMSTR"]))
-Depends(libslab_install, libslab)
+Depends(libsupport_install, libsupport)
 
-env["LIBRARIES"].append(libslab_install)
+env["LIBRARIES"].append(libsupport_install)

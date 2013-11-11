@@ -9,7 +9,7 @@
 /source/servers/terminal/terminal
 
 /source/lib/c/libc.a
-/source/lib/slab/libslab.a
+/source/lib/support/libsupport.a
 /source/lib/devman/libdevman_client.a
 /source/lib/devman/libdevman_server.a
 

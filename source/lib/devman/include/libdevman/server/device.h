@@ -22,7 +22,7 @@
 
 #include <libdevman/type.h>
 
-#include <libslab/cache.h>
+#include <libsupport/hashtable.h>
 
 #include <stddef.h>
 
@@ -34,10 +34,12 @@ struct device_ops
 
 struct device
 {
-    int port;
-    struct device_ops* ops;
+    struct hashitem _item;
 
-    struct slab_cache conn_cache;
+    // the ID of the device
+    int id;
+
+    struct device_ops* ops;
 };
 
 struct device_conn
@@ -53,12 +55,12 @@ struct device_conn
 /**
  * Announces a new device with the given type on the specified port.
  */
-int device_announce(struct device* dev, enum device_type type, int port, struct device_ops* ops);
+int device_announce(enum device_type type, struct device_ops* ops);
 
 /**
  * The main loop of a device.
  */
-int device_run(struct device* dev);
+int libdevman_server_run();
 
 /**
  * Initializes the device manager library.

@@ -148,20 +148,11 @@ int main(int argc, char** argv)
 
     libdevman_server_init();
 
-    int p = ipc_port_create();
-
-    if (p < 0)
-    {
-	dbprintf("screen: unable to create IPC port\n");
-	return -1;
-    }
-
-    struct device dev;
-
     // announce the new driver
-    device_announce(&dev, SCREEN, p, &s_ops);
+    device_announce(SCREEN, &s_ops);
+
     // run the main loop
-    device_run(&dev);
+    libdevman_server_run();
 
     return 0;
 }

@@ -19,35 +19,55 @@
 
 #include <libdevman/server/device.h>
 
-#include <libslab/cache.h>
+#include <libsupport/slab.h>
 
 #include <urubu/ipc.h>
 
+static int s_local_port = -1;
 static int s_devman_port = -1;
 
+static int s_next_id = 0;
+static struct hashtable s_dev_table;
+
+static struct slab_cache s_dev_cache;
 static struct slab_cache s_dev_conn_cache;
 
 // =====================================================================================================================
-int device_announce(struct device* dev, enum device_type type, int port, struct device_ops* ops)
+int device_announce(enum device_type type, struct device_ops* ops)
 {
-    dev->port = port;
+    struct device* dev = (struct device*)slab_cache_alloc(&s_dev_cache);
+
+    if (!dev)
+	return -1;
+
+    dev->id = s_next_id++;
     dev->ops = ops;
 
-    if (slab_cache_init(&dev->conn_cache, sizeof(struct device_conn)) != 0)
-	return -1;
+    hashtable_add(&s_dev_table, (struct hashitem*)dev);
 
     struct ipc_message msg;
     msg.data[0] = MSG_DEVICE_ANNOUNCE;
     msg.data[1] = type;
-    msg.data[2] = port;
+    msg.data[2] = s_local_port;
+    msg.data[3] = dev->id;
 
-    return ipc_port_send(s_devman_port, &msg);
+    if (ipc_port_send(s_devman_port, &msg) != 0)
+	return -1;
+
+    return 0;
 }
 
 // =====================================================================================================================
-static void do_open(struct device* dev, struct ipc_message* m)
+static void do_open(struct ipc_message* m)
 {
+    struct device* dev;
     struct ipc_message rep;
+
+    int id = m->data[1];
+    dev = (struct device*)hashtable_get(&s_dev_table, &id);
+
+    if (!dev)
+	goto err1;
 
     // allocate a new connection object
     struct device_conn* c = (struct device_conn*)slab_cache_alloc(&s_dev_conn_cache);
@@ -56,7 +76,7 @@ static void do_open(struct device* dev, struct ipc_message* m)
 	goto err1;
 
     c->dev = dev;
-    c->shmem = m->data[1];
+    c->shmem = m->data[2];
 
     // accept the shared memory
     if (ipc_shmem_accept(c->shmem, &c->data, &c->size) != 0)
@@ -64,7 +84,7 @@ static void do_open(struct device* dev, struct ipc_message* m)
 
     rep.data[0] = 0;
     rep.data[1] = (unsigned long)c; // TODO: a proper ID should be used instead of the pointer ...
-    ipc_port_send(m->data[2], &rep);
+    ipc_port_send(m->data[3], &rep);
 
     return;
 
@@ -92,19 +112,19 @@ static void do_write(struct ipc_message* m)
 }
 
 // =====================================================================================================================
-int device_run(struct device* dev)
+int libdevman_server_run()
 {
     while (1)
     {
 	struct ipc_message msg;
 
-	if (ipc_port_receive(dev->port, &msg) != 0)
+	if (ipc_port_receive(s_local_port, &msg) != 0)
 	    return -1;
 
 	switch (msg.data[0])
 	{
 	    case MSG_DEVICE_OPEN :
-		do_open(dev, &msg);
+		do_open(&msg);
 		break;
 
 	    case MSG_DEVICE_CLOSE :
@@ -123,9 +143,26 @@ int device_run(struct device* dev)
 }
 
 // =====================================================================================================================
+static const void* device_key(struct hashitem* item)
+{
+    struct device* dev = (struct device*)item;
+    return &dev->id;
+}
+
+// =====================================================================================================================
 int libdevman_server_init()
 {
+    s_local_port = ipc_port_create();
+
+    if (s_local_port < 0)
+	return -1;
+
     s_devman_port = ipc_server_lookup("devman", 1);
+
+    hashtable_init(&s_dev_table, device_key, hashtable_hash_int, hashtable_compare_int);
+
+    slab_cache_init(&s_dev_cache, sizeof(struct device));
     slab_cache_init(&s_dev_conn_cache, sizeof(struct device_conn));
+
     return 0;
 }

@@ -109,6 +109,10 @@ long sys_ipc_server_lookup(const char* name, int wait)
 	w->name[SERVER_NAME_SIZE - 1] = 0;
 	w->waiter = thread_current();
 
+	// link the new waiter to the global list
+	w->next = s_waiters;
+	s_waiters = w;
+
 	spinunlock(&s_server_lock);
 	thread_sleep();
 	spinlock_disable(&s_server_lock);

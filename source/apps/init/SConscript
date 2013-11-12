@@ -18,4 +18,6 @@
 
 Import("env")
 
-SConscript(dirs = ["kernel", "lib", "drivers", "servers", "apps"], exports = ["env"])
+init = env.Program(target = "init", source = ["src/main.c"], LIBS = ["devman_client"])
+
+env["SYS_APPS"].append(init)

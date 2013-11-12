@@ -122,7 +122,7 @@ static void screen_putc(char c)
 }
 
 // =====================================================================================================================
-static int screen_write(const void* data, size_t size)
+static int screen_write(void* dev, const void* data, size_t size)
 {
     uint8_t* p = (uint8_t*)data;
 
@@ -149,7 +149,7 @@ int main(int argc, char** argv)
     libdevman_server_init();
 
     // announce the new driver
-    device_announce(SCREEN, &s_ops);
+    device_announce(SCREEN, &s_ops, NULL, NULL);
 
     // run the main loop
     libdevman_server_run(NULL);

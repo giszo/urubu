@@ -26,8 +26,8 @@
 
 struct device_ops
 {
-    int (*read)(void* data, size_t size);
-    int (*write)(const void* data, size_t size);
+    int (*read)(void*, void*, size_t);
+    int (*write)(void*, const void*, size_t);
 };
 
 struct ipc_message;
@@ -37,7 +37,7 @@ typedef void msg_handler(struct ipc_message*);
 /**
  * Announces a new device with the given type on the specified port.
  */
-int device_announce(enum device_type type, struct device_ops* ops);
+int device_announce(enum device_type type, struct device_ops* ops, void* data, int* id);
 
 /**
  * Returns the port ID allocated by the library.

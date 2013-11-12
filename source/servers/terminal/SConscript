@@ -18,6 +18,10 @@
 
 Import("env")
 
-terminal = env.Program(target = "terminal", source = ["src/main.c"], LIBS = ["devman_client"])
+terminal = env.Program(
+    target = "terminal",
+    source = ["src/main.c", "src/pty.c"],
+    LIBS = ["devman_client", "libdevman_server", "support"]
+)
 
 env["SERVERS"].append(terminal)

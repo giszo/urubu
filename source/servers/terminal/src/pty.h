@@ -1,4 +1,4 @@
-/* Device manager server library.
+/* Terminal driver.
  *
  * Copyright (c) 2013 Zoltan Kovacs
  *
@@ -17,32 +17,20 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef _DEVICE_H_
-#define _DEVICE_H_
+#ifndef _TERMINAL_PTY_H_
+#define _TERMINAL_PTY_H_
 
 #include <libdevman/server/device.h>
 
-#include <libsupport/hashtable.h>
-
-struct device
+struct pty_device
 {
-    struct hashitem _item;
-
-    // the ID of the device
-    int id;
-
-    struct device_ops* ops;
-    void* data;
+    int dummy;
 };
 
-struct device_conn
-{
-    int id;
-    // the ID of the shared memory region used for data transfer
-    int shmem;
-    size_t size;
-    void* data;
-    struct device* dev;
-};
+extern struct device_ops s_pty_ops;
+
+struct pty_device* pty_create_device();
+
+void pty_init();
 
 #endif

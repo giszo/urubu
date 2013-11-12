@@ -17,15 +17,19 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#include <stdio.h>
+#include "pty.h"
 
 #include <libdevman/client/device.h>
+#include <libdevman/server/device.h>
 
 #include <urubu/mm.h>
 #include <urubu/debug.h>
 #include <urubu/thread.h>
+#include <urubu/ipc.h>
 
-static struct device s_screen;
+#include <stdio.h>
+
+struct device s_screen;
 
 // =====================================================================================================================
 void screen_printf(const char* fmt, ...)
@@ -41,9 +45,47 @@ void screen_printf(const char* fmt, ...)
 }
 
 // =====================================================================================================================
+static void do_create(struct ipc_message* msg)
+{
+    struct pty_device* dev = pty_create_device();
+
+    struct ipc_message rep;
+
+    if (dev)
+    {
+	int pty_id;
+
+	// announce the two new device we just created now
+	device_announce(PTY, &s_pty_ops, (void*)dev, &pty_id);
+
+	rep.data[0] = 0;
+	rep.data[1] = libdevman_server_get_port();
+	rep.data[2] = pty_id;
+    }
+    else
+	rep.data[0] = -1;
+
+    ipc_port_send(msg->data[1], &rep);
+}
+
+// =====================================================================================================================
+static void terminal_handler(struct ipc_message* msg)
+{
+    switch (msg->data[0])
+    {
+	case MSG_TERMINAL_CREATE :
+	    do_create(msg);
+	    break;
+    }
+}
+
+// =====================================================================================================================
 int main(int argc, char** argv)
 {
+    pty_init();
+
     libdevman_client_init();
+    libdevman_server_init();
 
     // wait for a screen type device to get registered
     struct device_info info;
@@ -61,6 +103,9 @@ int main(int argc, char** argv)
 	return -1;
     }
 
+    // register the terminal server
+    ipc_server_register("terminal", libdevman_server_get_port());
+
     // display some kind of system statistics for now on the screen ...
     struct mm_phys_stat ps;
     mm_get_phys_stat(&ps);
@@ -69,6 +114,9 @@ int main(int argc, char** argv)
     struct thread_stat ts;
     thread_get_statistics(&ts);
     screen_printf("Number of threads: %llu\n", ts.number);
+
+    // run the mainloop
+    libdevman_server_run(terminal_handler);
 
     return 0;
 }

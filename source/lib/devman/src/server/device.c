@@ -33,7 +33,7 @@ static struct slab_cache s_dev_cache;
 static struct slab_cache s_dev_conn_cache;
 
 // =====================================================================================================================
-int device_announce(enum device_type type, struct device_ops* ops)
+int device_announce(enum device_type type, struct device_ops* ops, void* data, int* id)
 {
     struct device* dev = (struct device*)slab_cache_alloc(&s_dev_cache);
 
@@ -42,6 +42,7 @@ int device_announce(enum device_type type, struct device_ops* ops)
 
     dev->id = s_next_id++;
     dev->ops = ops;
+    dev->data = data;
 
     hashtable_add(&s_dev_table, (struct hashitem*)dev);
 
@@ -53,6 +54,9 @@ int device_announce(enum device_type type, struct device_ops* ops)
 
     if (ipc_port_send(s_devman_port, &msg) != 0)
 	return -1;
+
+    if (id)
+	*id = dev->id;
 
     return 0;
 }
@@ -102,8 +106,9 @@ static void do_write(struct ipc_message* m)
 
     // TODO: do a proper lookup with an ID ...
     struct device_conn* c = (struct device_conn*)m->data[1];
+    struct device* dev = c->dev;
 
-    if (c->dev->ops->write == NULL || c->dev->ops->write((const void*)c->data, m->data[2]) != 0)
+    if (dev->ops->write == NULL || c->dev->ops->write(dev->data, (const void*)c->data, m->data[2]) != 0)
 	rep.data[0] = -1;
     else
 	rep.data[0] = 0;

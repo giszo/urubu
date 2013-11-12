@@ -23,6 +23,7 @@
 enum device_type
 {
     SCREEN,
+    PTY,
     DEV_TYPE_COUNT
 };
 

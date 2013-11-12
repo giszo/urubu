@@ -18,4 +18,4 @@
 
 Import("env")
 
-SConscript(dirs = ["kernel", "lib", "drivers", "servers", "apps"], exports = ["env"])
+SConscript(dirs = ["init"], exports = ["env"])

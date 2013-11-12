@@ -28,6 +28,7 @@ def setup(env) :
     env["LIBRARIES"] = []
     env["DRIVERS"] = []
     env["SERVERS"] = []
+    env["SYS_APPS"] = []
 
     # setup compiler executables
     # TODO: the x86_64 part is still hardcoded ...

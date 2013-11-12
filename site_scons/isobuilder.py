@@ -28,25 +28,29 @@ def _write_grub_config(d, drivers, servers) :
         f.write("module /system/servers/%s\n" % server[server.rfind('/')+1:])
     for driver in drivers :
         f.write("module /system/drivers/%s\n" % driver[driver.rfind('/')+1:])
+    f.write("module /system/init")
     f.close()
 
 def _iso_builder(target, source, env) :
     # Create a temporary directory to build the image tree
     d = tempfile.mkdtemp()
 
-    # Copy the kernel image
     system = os.path.join(d, "system")
+    servers = os.path.join(d, "system", "servers")
+    drivers = os.path.join(d, "system", "drivers")
+
+    # Copy the kernel image
     os.mkdir(system)
     shutil.copy(str(env["KERNEL"][0]), system)
+    for a in env["SYS_APPS"] :
+        shutil.copy(str(a[0]), system)
 
     # Copy drivers to the image
-    drivers = os.path.join(d, "system", "drivers")
     os.makedirs(drivers)
     for driver in env["DRIVERS"] :
 	shutil.copy(str(driver[0]), drivers)
 
     # Copy servers to the image
-    servers = os.path.join(d, "system", "servers")
     os.makedirs(servers)
     for server in env["SERVERS"] :
 	shutil.copy(str(server[0]), servers)
@@ -70,4 +74,4 @@ def _iso_builder(target, source, env) :
     return 0
 
 def _iso_emitter(target, source, env) :
-    return target, source + [env["KERNEL"]] + env["LIBRARIES"] + env["DRIVERS"] + env["SERVERS"]
+    return target, source + [env["KERNEL"]] + env["LIBRARIES"] + env["DRIVERS"] + env["SERVERS"] + env["SYS_APPS"]

@@ -51,13 +51,6 @@ static struct slab* slab_create(struct slab_cache* cache)
 }
 
 // =====================================================================================================================
-static void slab_free(struct slab_cache* cache, struct slab* s)
-{
-    uint8_t* p = (uint8_t*)s + sizeof(struct slab) - cache->slab_size;
-    // TODO: free ...
-}
-
-// =====================================================================================================================
 int slab_cache_init(struct slab_cache* cache, size_t obj_size)
 {
     // align the object size to the native pointer size
@@ -135,25 +128,18 @@ void slab_cache_free(struct slab_cache* cache, void* p)
     s->free_list = buffer;
     s->free_count++;
 
-    int slab_is_free = (s->free_count == cache->obj_per_slab);
-
     /* Remove this slab from its list? */
-    if (slab_was_full || slab_is_free)
+    if (slab_was_full)
     {
 	struct slab* prev = NULL;
-	struct slab* item = slab_was_full ? cache->slab_full : cache->slab_partial;
+	struct slab* item = cache->slab_full;
 
 	while (item)
 	{
 	    if (item == s)
 	    {
-		if (prev == NULL)
-		{
-		    if (slab_was_full)
-			cache->slab_full = item->next;
-		    else
-			cache->slab_partial = item->next;
-		}
+		if (!prev)
+		    cache->slab_full = item->next;
 		else
 		    prev->next = item->next;
 
@@ -165,9 +151,7 @@ void slab_cache_free(struct slab_cache* cache, void* p)
 	}
     }
 
-    if (slab_is_free)
-	slab_free(cache, s);
-    else if (slab_was_full)
+    if (slab_was_full)
     {
 	s->next = cache->slab_partial;
 	cache->slab_partial = s;

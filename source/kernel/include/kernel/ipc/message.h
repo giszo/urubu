@@ -31,6 +31,9 @@ struct ipc_user_msg
 
 struct ipc_message
 {
+    // the process ID of the sender
+    int sender;
+
     // data of the message
     struct ipc_user_msg data;
 

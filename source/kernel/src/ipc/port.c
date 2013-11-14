@@ -21,6 +21,7 @@
 
 #include <kernel/console.h>
 #include <kernel/proc/thread.h>
+#include <kernel/proc/process.h>
 #include <kernel/ipc/port.h>
 #include <kernel/mm/slab.h>
 #include <kernel/sync/spinlock.h>
@@ -97,7 +98,7 @@ static void do_send(struct ipc_port* p, struct ipc_message* msg)
 }
 
 // =====================================================================================================================
-int ipc_port_send(int port, void* data)
+int ipc_port_send(int port, void* data, int sender)
 {
     struct ipc_port* p;
     struct ipc_message* msg;
@@ -117,6 +118,7 @@ int ipc_port_send(int port, void* data)
 	goto err1;
 
     // save the contents of the message
+    msg->sender = sender;
     memcpy(&msg->data, data, sizeof(struct ipc_user_msg));
 
     do_send(p, msg);
@@ -167,11 +169,11 @@ long sys_ipc_port_delete(int port)
 // =====================================================================================================================
 long sys_ipc_port_send(int port, void* data)
 {
-    return ipc_port_send(port, data);
+    return ipc_port_send(port, data, thread_current()->proc->id);
 }
 
 // =====================================================================================================================
-long sys_ipc_port_receive(int port, void* data)
+long sys_ipc_port_receive(int port, void* data, int* sender)
 {
     struct ipc_port* p;
     struct ipc_message* msg;
@@ -208,6 +210,9 @@ long sys_ipc_port_receive(int port, void* data)
 
     // copy the contents of the message to the buffer
     memcpy(data, &msg->data, sizeof(struct ipc_user_msg));
+
+    if (sender)
+	*sender = msg->sender;
 
     // destroy the message
     ipc_message_destroy(msg);

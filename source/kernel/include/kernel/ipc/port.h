@@ -39,12 +39,12 @@ struct ipc_port
     struct threadqueue waiters;
 };
 
-int ipc_port_send(int port, void* data);
+int ipc_port_send(int port, void* data, int sender);
 
 long sys_ipc_port_create();
 long sys_ipc_port_delete(int port);
 long sys_ipc_port_send(int port, void* data);
-long sys_ipc_port_receive(int port, void* data);
+long sys_ipc_port_receive(int port, void* data, int* sender);
 
 void ipc_port_init();
 

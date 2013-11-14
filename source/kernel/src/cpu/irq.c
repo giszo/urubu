@@ -48,7 +48,7 @@ int irq_handle(int irq, struct irq_context* ctx)
 	    msg.data[0] = 1; // TODO: irq message ID
 	    msg.data[1] = irq;
 
-	    if (ipc_port_send(is->server.port, &msg) != 0)
+	    if (ipc_port_send(is->server.port, &msg, 0 /* kernel */) != 0)
 		dprintf("irq: unable to send message to the requested port");
 
 	    break;

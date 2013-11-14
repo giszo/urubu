@@ -58,6 +58,7 @@ void ipc_port_delete(int port);
 
 int ipc_port_send(int port, struct ipc_message* msg);
 int ipc_port_receive(int port, struct ipc_message* msg);
+int ipc_port_receive_ext(int port, struct ipc_message* msg, int* sender);
 
 int ipc_shmem_create(size_t size, void** base);
 int ipc_shmem_accept(int id, void** base, size_t* size);

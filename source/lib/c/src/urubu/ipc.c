@@ -42,7 +42,15 @@ int ipc_port_send(int port, struct ipc_message* msg)
 // =====================================================================================================================
 int ipc_port_receive(int port, struct ipc_message* msg)
 {
-    int r = syscall2(SYS_ipc_port_receive, port, (unsigned long)msg);
+    int r = syscall3(SYS_ipc_port_receive, port, (unsigned long)msg, 0);
+    memory_barrier();
+    return r;
+}
+
+// =====================================================================================================================
+int ipc_port_receive_ext(int port, struct ipc_message* msg, int* sender)
+{
+    int r = syscall3(SYS_ipc_port_receive, port, (unsigned long)msg, (unsigned long)sender);
     memory_barrier();
     return r;
 }

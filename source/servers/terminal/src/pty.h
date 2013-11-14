@@ -27,10 +27,10 @@ struct pty_device
     int dummy;
 };
 
-extern struct device_ops s_pty_ops;
+void pty_input_available(char c);
 
-struct pty_device* pty_create_device();
+struct device* pty_create_device();
 
-void pty_init();
+void init_pty();
 
 #endif

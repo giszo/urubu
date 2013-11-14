@@ -30,7 +30,9 @@ struct device_info
     int id;
 };
 
-struct device
+struct device_conn_request;
+
+struct device_conn
 {
     // the target port of the device
     int port;
@@ -43,6 +45,25 @@ struct device
     // size of the shared memory region
     size_t size;
     unsigned long conn_id;
+
+    // the currently running request on the connection
+    struct device_conn_request* request;
+    // request queue
+    struct device_conn_request* queue_head;
+    struct device_conn_request* queue_tail;
+};
+
+typedef void async_callback(int, void*);
+
+struct device_conn_request
+{
+    enum device_operation op;
+    void* data;
+    size_t size;
+    async_callback* cb;
+    void* p;
+
+    struct device_conn_request* next;
 };
 
 /**
@@ -53,12 +74,14 @@ int device_lookup(enum device_type type, int wait, struct device_info* info);
 /**
  * Opens the device selected by the provided device information.
  */
-int device_open(struct device* dev, struct device_info* info);
+int device_open(struct device_conn* dev, struct device_info* info);
+
+int device_read(struct device_conn* dev, void* data, size_t size);
 
 /**
  * Writes the given data to the opened device.
  */
-int device_write(struct device* dev, const void* data, size_t size);
+int device_write(struct device_conn* dev, const void* data, size_t size);
 
 int libdevman_client_init();
 

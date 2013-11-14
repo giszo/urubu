@@ -122,18 +122,22 @@ static void screen_putc(char c)
 }
 
 // =====================================================================================================================
-static int screen_write(void* dev, const void* data, size_t size)
+static int screen_write(struct device* dev, struct device_request* req)
 {
-    uint8_t* p = (uint8_t*)data;
+    uint8_t* p = (uint8_t*)req->data;
 
-    for (size_t i = 0; i < size; ++i)
+    for (size_t i = 0; i < req->size; ++i)
 	screen_putc(p[i]);
+
+    device_request_finished(req, (int)req->size);
 
     return 0;
 }
 
 // =====================================================================================================================
-struct device_ops s_ops = {
+struct device_ops s_ops =
+{
+    .open = NULL,
     .read = NULL,
     .write = screen_write
 };

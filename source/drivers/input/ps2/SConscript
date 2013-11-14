@@ -18,6 +18,10 @@
 
 Import("env")
 
-ps2 = env.Program(target = "ps2", source = ["src/main.c"])
+ps2 = env.Program(
+    target = "ps2",
+    source = ["src/main.c"],
+    LIBS = ["devman_server", "support"]
+)
 
 env["DRIVERS"].append(ps2)

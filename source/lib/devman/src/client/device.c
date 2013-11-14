@@ -67,10 +67,13 @@ err:
 }
 
 // =====================================================================================================================
-int device_open(struct device* dev, struct device_info* info)
+int device_open(struct device_conn* dev, struct device_info* info)
 {
     dev->port = info->port;
     dev->size = PAGE_SIZE;
+    dev->request = NULL;
+    dev->queue_head = NULL;
+    dev->queue_tail = NULL;
 
     // allocate a reply port
     dev->reply = ipc_port_create();
@@ -117,7 +120,43 @@ err1:
 }
 
 // =====================================================================================================================
-int device_write(struct device* dev, const void* data, size_t size)
+int device_read(struct device_conn* dev, void* data, size_t size)
+{
+    uint8_t* p = (uint8_t*)data;
+
+    while (size > 0)
+    {
+	// find out how much data we can transfer in a chunk
+	size_t s = size < dev->size ? size : dev->size;
+
+	// send the write request
+	struct ipc_message msg;
+	msg.data[0] = MSG_DEVICE_READ;
+	msg.data[1] = dev->conn_id;
+	msg.data[2] = s;
+	// msg.data[3] is not used here, see device_read_async() for details
+	msg.data[4] = dev->reply;
+
+	if (ipc_port_send(dev->port, &msg) != 0)
+	    return -1;
+
+	// wait for the reply
+	struct ipc_message rep;
+
+	if (ipc_port_receive(dev->reply, &rep) != 0)
+	    return -1;
+
+	// copy the data to the read buffer
+	memcpy(p, dev->data, s);
+	size -= s;
+	p += s;
+    }
+
+    return 0;
+}
+
+// =====================================================================================================================
+int device_write(struct device_conn* dev, const void* data, size_t size)
 {
     uint8_t* p = (uint8_t*)data;
 
@@ -136,7 +175,8 @@ int device_write(struct device* dev, const void* data, size_t size)
 	msg.data[0] = MSG_DEVICE_WRITE;
 	msg.data[1] = dev->conn_id;
 	msg.data[2] = s;
-	msg.data[3] = dev->reply;
+	// msg.data[3] is not used, see above ...
+	msg.data[4] = dev->reply;
 
 	if (ipc_port_send(dev->port, &msg) != 0)
 	    return -1;
@@ -146,9 +186,6 @@ int device_write(struct device* dev, const void* data, size_t size)
 
 	if (ipc_port_receive(dev->reply, &rep) != 0)
 	    return -1;
-
-	if (rep.data[0] != 0)
-	    return  -1;
     }
 
     return 0;

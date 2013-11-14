@@ -47,9 +47,16 @@ int main(int argc, char** argv)
     info.port = rep.data[1];
     info.id = rep.data[2];
 
-    struct device dev;
+    struct device_conn dev;
     device_open(&dev, &info);
     device_write(&dev, "hello from init", 15);
+
+    while (1)
+    {
+	char c;
+	device_read(&dev, &c, 1);
+	device_write(&dev, &c, 1);
+    }
 
     return 0;
 }

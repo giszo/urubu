@@ -20,39 +20,71 @@
 #include "pty.h"
 
 #include <libdevman/client/device.h>
+#include <libdevman/client/async.h>
 
 #include <libsupport/slab.h>
 
+#include <string.h>
+
 static struct slab_cache s_pty_cache;
 
-extern struct device s_screen;
+static struct device* s_active_pty = NULL;
+
+extern struct device_conn s_screen;
 
 // =====================================================================================================================
-static int pty_write(void* p, const void* data, size_t size)
+void pty_input_available(char c)
 {
-    device_write(&s_screen, data, size);
+    if (!s_active_pty || !s_active_pty->request)
+	return;
+
+    memcpy(s_active_pty->request->data, &c, 1);
+    device_request_finished(s_active_pty->request, 1);
+}
+
+// =====================================================================================================================
+static int pty_read(struct device* dev, struct device_request* req)
+{
     return 0;
 }
 
 // =====================================================================================================================
-struct device_ops s_pty_ops = {
-    .read = NULL,
+static int pty_write(struct device* dev, struct device_request* req)
+{
+    // TODO: screen writing should be performed asynchronously
+    device_write(&s_screen, req->data, req->size);
+    device_request_finished(req, 0);
+    return 0;
+}
+
+// =====================================================================================================================
+static struct device_ops s_pty_ops =
+{
+    .open = NULL,
+    .read = pty_read,
     .write = pty_write
 };
 
 // =====================================================================================================================
-struct pty_device* pty_create_device()
+struct device* pty_create_device()
 {
     struct pty_device* pty  = (struct pty_device*)slab_cache_alloc(&s_pty_cache);
 
     if (!pty)
 	return NULL;
 
-    return pty;
+    // announce the two new device we just created now
+    struct device* dev;
+    device_announce(PTY, &s_pty_ops, (void*)pty, &dev);
+
+    if (!s_active_pty)
+	s_active_pty = dev;
+
+    return dev;
 }
 
 // =====================================================================================================================
-void pty_init()
+void init_pty()
 {
     slab_cache_init(&s_pty_cache, sizeof(struct pty_device));
 }

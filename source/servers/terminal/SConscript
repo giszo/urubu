@@ -20,7 +20,7 @@ Import("env")
 
 terminal = env.Program(
     target = "terminal",
-    source = ["src/main.c", "src/pty.c"],
+    source = ["src/main.c", "src/pty.c", "src/input.c", "src/screen.c"],
     LIBS = ["devman_client", "libdevman_server", "support"]
 )
 

@@ -141,11 +141,20 @@ void _printf_helper(_printf_output_t* out, void* data, const char* fmt, va_list 
 			break;
 		    }
 
+		    case 'c' :
+		    {
+			char c = va_arg(args, int);
+			out(data, c);
+			state = NORMAL;
+			break;
+		    }
+
 		    case 's' :
 		    {
 			char* s = va_arg(args, char*);
 			_printf_string(out, data, s);
 			state = NORMAL;
+			break;
 		    }
 
 		    case 'l' :

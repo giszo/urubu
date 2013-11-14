@@ -31,9 +31,10 @@ static struct hashtable s_dev_table;
 
 static struct slab_cache s_dev_cache;
 static struct slab_cache s_dev_conn_cache;
+static struct slab_cache s_dev_req_cache;
 
 // =====================================================================================================================
-int device_announce(enum device_type type, struct device_ops* ops, void* data, int* id)
+int device_announce(enum device_type type, struct device_ops* ops, void* data, struct device** _dev)
 {
     struct device* dev = (struct device*)slab_cache_alloc(&s_dev_cache);
 
@@ -41,6 +42,9 @@ int device_announce(enum device_type type, struct device_ops* ops, void* data, i
 	return -1;
 
     dev->id = s_next_id++;
+    dev->request = NULL;
+    dev->queue_head = NULL;
+    dev->queue_tail = NULL;
     dev->ops = ops;
     dev->data = data;
 
@@ -55,8 +59,8 @@ int device_announce(enum device_type type, struct device_ops* ops, void* data, i
     if (ipc_port_send(s_devman_port, &msg) != 0)
 	return -1;
 
-    if (id)
-	*id = dev->id;
+    if (_dev)
+	*_dev = dev;
 
     return 0;
 }
@@ -86,12 +90,18 @@ static void do_open(struct ipc_message* m)
     if (ipc_shmem_accept(c->shmem, &c->data, &c->size) != 0)
 	goto err2;
 
+    // open the device
+    if (dev->ops->open != NULL && dev->ops->open(dev) != 0)
+	goto err3;
+
     rep.data[0] = 0;
     rep.data[1] = (unsigned long)c; // TODO: a proper ID should be used instead of the pointer ...
     ipc_port_send(m->data[3], &rep);
 
     return;
 
+err3:
+    // TODO: cleanup shmem
 err2:
     slab_cache_free(&s_dev_conn_cache, (void*)c);
 err1:
@@ -100,20 +110,78 @@ err1:
 }
 
 // =====================================================================================================================
-static void do_write(struct ipc_message* m)
+static void queue_request(struct device* d, struct device_request* req)
 {
-    struct ipc_message rep;
+    req->next = NULL;
 
-    // TODO: do a proper lookup with an ID ...
-    struct device_conn* c = (struct device_conn*)m->data[1];
-    struct device* dev = c->dev;
+    if (d->queue_tail)
+	d->queue_tail->next = req;
 
-    if (dev->ops->write == NULL || c->dev->ops->write(dev->data, (const void*)c->data, m->data[2]) != 0)
-	rep.data[0] = -1;
+    d->queue_tail = req;
+
+    if (!d->queue_head)
+	d->queue_head = req;
+}
+
+// =====================================================================================================================
+static void perform_request(struct device* d, struct device_request* req)
+{
+    // assign the request to the device
+    d->request = req;
+
+    switch (req->op)
+    {
+	case READ :
+	    if (d->ops->read)
+		d->ops->read(d, req);
+	    break;
+	case WRITE :
+	    if (d->ops->write)
+		d->ops->write(d, req);
+	    break;
+    }
+}
+
+// =====================================================================================================================
+int device_request_finished(struct device_request* req, int result)
+{
+    // send the reply of the current request
+    struct ipc_message msg;
+
+    switch (req->op)
+    {
+	case READ : msg.data[0] = MSG_DEVICE_READ_REPLY; break;
+	case WRITE : msg.data[0] = MSG_DEVICE_WRITE_REPLY; break;
+    }
+
+    msg.data[1] = result;
+    msg.data[2] = req->p;
+
+    ipc_port_send(req->port, &msg);
+
+    struct device* dev = req->dev;
+
+    // free the request object
+    slab_cache_free(&s_dev_req_cache, (void*)req);
+
+    if (dev->queue_head)
+    {
+	// get the first queued request to execute
+	req = dev->queue_head;
+	dev->queue_head = req->next;
+
+	if (!dev->queue_head)
+	    dev->queue_tail = NULL;
+
+	perform_request(dev, req);
+    }
     else
-	rep.data[0] = 0;
+    {
+	// clear the current request if there is no queued one on the device
+	dev->request = NULL;
+    }
 
-    ipc_port_send(m->data[3], &rep);
+    return 0;
 }
 
 // =====================================================================================================================
@@ -136,11 +204,37 @@ int libdevman_server_run(msg_handler* handler)
 		break;
 
 	    case MSG_DEVICE_READ :
-		break;
+	    case MSG_DEVICE_WRITE :
+	    {
+		struct device_conn* c = (struct device_conn*)msg.data[1];
+		struct device* dev = c->dev;
 
-	    case MSG_DEVICE_WRITE:
-		do_write(&msg);
+		struct device_request* req = slab_cache_alloc(&s_dev_req_cache);
+
+		if (!req)
+		{
+		    // send error to the other side in this case
+		    struct ipc_message rep;
+		    rep.data[0] = -1;
+		    ipc_port_send(msg.data[3], &rep);
+		    break;
+		}
+
+		// fill the request
+		req->dev = dev;
+		req->op = msg.data[0] == MSG_DEVICE_READ ? READ : WRITE;
+		req->port = msg.data[4];
+		req->data = c->data;
+		req->size = msg.data[2];
+		req->p = msg.data[3];
+
+		if (dev->request)
+		    queue_request(dev, req);
+		else
+		    perform_request(dev, req);
+
 		break;
+	    }
 
 	    default :
 		if (handler)
@@ -173,6 +267,7 @@ int libdevman_server_init()
 
     slab_cache_init(&s_dev_cache, sizeof(struct device));
     slab_cache_init(&s_dev_conn_cache, sizeof(struct device_conn));
+    slab_cache_init(&s_dev_req_cache, sizeof(struct device_request));
 
     return 0;
 }

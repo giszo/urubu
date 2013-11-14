@@ -130,6 +130,8 @@ static void lookup(struct ipc_message* m)
 send_reply:
     ipc_port_send(m->data[3], &reply);
 
+    return;
+
 send_error:
     reply.data[0] = -1;
     goto send_reply;

@@ -19,7 +19,8 @@
 Import("env")
 
 client_sources = [
-    "device.c"
+    "device.c",
+    "async.c"
 ]
 
 server_sources = [

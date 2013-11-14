@@ -13,6 +13,8 @@
 /source/lib/devman/libdevman_client.a
 /source/lib/devman/libdevman_server.a
 
+/source/apps/init/init
+
 /urubu-amd64.iso
 
 /toolchain/amd64

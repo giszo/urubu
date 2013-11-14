@@ -1,4 +1,4 @@
-/* Device manager library.
+/* Asynchronous device handling functions.
  *
  * Copyright (c) 2013 Zoltan Kovacs
  *
@@ -17,21 +17,17 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef _LIBDEVMAN_TYPE_H_
-#define _LIBDEVMAN_TYPE_H_
+#ifndef _LIBDEVMAN_CLIENT_ASYNC_H_
+#define _LIBDEVMAN_CLIENT_ASYNC_H_
 
-enum device_type
-{
-    SCREEN,
-    INPUT,
-    PTY,
-    DEV_TYPE_COUNT
-};
+#include <urubu/ipc.h>
 
-enum device_operation
-{
-    READ,
-    WRITE
-};
+#include "device.h"
+
+int device_read_async(struct device_conn* dev, void* data, size_t size, async_callback* cb, void* p);
+
+int libdevman_client_async_process(struct ipc_message* msg);
+
+int libdevman_client_async_init(int port);
 
 #endif

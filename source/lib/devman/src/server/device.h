@@ -24,17 +24,6 @@
 
 #include <libsupport/hashtable.h>
 
-struct device
-{
-    struct hashitem _item;
-
-    // the ID of the device
-    int id;
-
-    struct device_ops* ops;
-    void* data;
-};
-
 struct device_conn
 {
     int id;
